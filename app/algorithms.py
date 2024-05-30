@@ -54,6 +54,9 @@ class PCA:
     def get_components(self):
         return self.model.components_
     
+    def get_loadings(self):
+        return self.model.components_.T * np.sqrt(self.model.explained_variance_)
+    
     def get_fit(self):
         return self.fit
     
@@ -73,7 +76,8 @@ if __name__ == "__main__":
     pca = PCA(pca_input, X)
     X = pca()
     x_ax = np.arange(0, X.shape[1])
+    ax.plot(X[:, 0], X[:, 1], "o")
 
-    ax.plot(X[0], X[1], "o")
+    print(pca.get_loadings())
 
     plt.show()
