@@ -62,13 +62,14 @@ class PCA:
     
 
 if __name__ == "__main__":
-    pca_input = PCA_Input(n_components = 3)
+    pca_input = PCA_Input(n_components = 2)
 
     np.random.seed(5)
 
     iris = datasets.load_iris()
     X = iris.data
     y = iris.target
+    print(iris.feature_names)
 
     fig, ax = plt.subplots(1, 1, figsize=(8, 6), tight_layout=True)
 
@@ -77,7 +78,12 @@ if __name__ == "__main__":
     X = pca()
     x_ax = np.arange(0, X.shape[1])
     ax.plot(X[:, 0], X[:, 1], "o")
+    loadings = pca.get_loadings()
+    colors = ["red", "blue", "black", "green"]
+    for i in range(loadings.shape[0]):
+        xi_ax = [0, loadings[i][0]]
+        yi_ax = [0, loadings[i][1]]
+        ax.plot(xi_ax, yi_ax, color=colors[i], label=iris.feature_names[i], linewidth=3) 
 
-    print(pca.get_loadings())
-
+    ax.legend(loc="best")
     plt.show()
