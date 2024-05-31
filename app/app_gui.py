@@ -8,6 +8,7 @@ class App_Ui:
     
     def __call__(self):
         with dpg.window(no_scrollbar=True) as self.primar_window:
+            self.main_menubar()
             with dpg.table(header_row=False, resizable=True):
                 dpg.add_table_column(width_fixed=True, init_width_or_weight=200)
                 dpg.add_table_column()
@@ -22,6 +23,21 @@ class App_Ui:
                             dpg.add_text("Child Window 3")
                     
         dpg.set_primary_window(self.primar_window, True)
+    
+    def main_menubar(self):
+        with dpg.menu_bar():
+            with dpg.menu(label="File"):
+                dpg.add_menu_item(label="New")
+                dpg.add_menu_item(label="Open")
+            
+            with dpg.menu(label="Edit"):
+                dpg.add_menu_item(label="Something")
+                dpg.add_menu_item(label="Preferences")
+            
+            with dpg.menu(label="Tools"):
+                dpg.add_menu_item(label="PCA")
+                dpg.add_menu_item(label="Factor Analysis")
+                dpg.add_menu_item(label="Parallel Factor Analysis")
         
     def adjustable_separator(self, child_window, width=3840, height=2, colour=(255, 255, 255, 50)):
         with dpg.texture_registry():
