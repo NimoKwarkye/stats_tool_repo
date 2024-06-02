@@ -59,7 +59,11 @@ class PCA:
     
     def get_fit(self):
         return self.fit
-    
+
+
+
+
+
 
 if __name__ == "__main__":
     pca_input = PCA_Input(n_components = 2)

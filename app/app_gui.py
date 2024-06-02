@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 from itertools import chain
-
+import constants
 class App_Ui:
     def __init__(self):
         self.primar_window = None
@@ -16,7 +16,7 @@ class App_Ui:
                     with dpg.child_window() as child_window_1:
                         dpg.add_text("Child Window 1")
                     with dpg.group():
-                        with dpg.child_window(height=500) as child_window_2:
+                        with dpg.child_window(height=500, tag=constants.PLOT_WINDOW) as child_window_2:
                             dpg.add_text("Child Window 2")
                         self.adjustable_separator(child_window_2)
                         with dpg.child_window():
