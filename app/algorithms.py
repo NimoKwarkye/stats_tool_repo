@@ -19,7 +19,7 @@ class PCA_Input:
     random_state : int = None
 
 class PCA:
-    def __init__(self, pca_args: PCA_Input, input_data):
+    def __init__(self, pca_args: PCA_Input, input_data : np.ndarray):
         self.input_args = pca_args
         self.input_data = input_data
         self.fit = None
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     print(iris.feature_names)
 
     fig, ax = plt.subplots(1, 1, figsize=(8, 6), tight_layout=True)
-
+    print(y)
 
     pca = PCA(pca_input, X)
     X = pca()

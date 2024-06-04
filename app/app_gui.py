@@ -1,9 +1,14 @@
 import dearpygui.dearpygui as dpg
 from itertools import chain
 import constants
+import algorithms as alg
+from sklearn import datasets
+import app_graph as gph
+
 class App_Ui:
     def __init__(self):
         self.primar_window = None
+        self.graph = None
         
     
     def __call__(self):
@@ -15,15 +20,27 @@ class App_Ui:
                 with dpg.table_row():
                     with dpg.child_window() as child_window_1:
                         dpg.add_text("Child Window 1")
+                        dpg.add_button(label="PCA", callback= self.pca_callback)
                     with dpg.group():
                         with dpg.child_window(height=500, tag=constants.PLOT_WINDOW) as child_window_2:
-                            dpg.add_text("Child Window 2")
+                            data_series = gph.Series_Data(xlabel="PC1", ylabel="PC2", plot_type="scatter")
+                            self.graph = gph.Plot_Series(data_series)
+                            self.graph()
                         self.adjustable_separator(child_window_2)
                         with dpg.child_window():
                             dpg.add_text("Child Window 3")
                     
         dpg.set_primary_window(self.primar_window, True)
     
+    def pca_callback(self):
+        pca_data = alg.PCA_Input(n_components=2)
+        iris = datasets.load_iris()
+        X = iris.data
+        pca_instance = alg.PCA(pca_data, X)
+        results = pca_instance()
+        self.graph.init_plot([list(results[:, 0]), list(results[:, 1]), list(iris.target)], gph.pca_plotter)
+
+
     def main_menubar(self):
         with dpg.menu_bar():
             with dpg.menu(label="File"):
