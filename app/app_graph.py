@@ -13,7 +13,7 @@ class Series_Data:
     title  : str = "graph"
     plot_type : str = "line"
     label : str = "line"
-    tag : int | str = "pca_plot"
+    tag :  str = "pca_plot"
 
 
 def pca_plotter(x_data:list, y_data:list, targets : list=None):
@@ -22,14 +22,16 @@ def pca_plotter(x_data:list, y_data:list, targets : list=None):
     else:
         if len(targets) == len(x_data):
             colors = [(255, 0, 0, 255), (0, 255, 0, 255), (0, 0, 255, 255)]
-            split_x = [[], [], []]
-            split_y = [[], [], []]
+            split_data = {}
+            unique_targets = set(targets)
+            for tg in unique_targets:
+                split_data[tg] = [[], []]
 
             for idx, tg in enumerate(targets):
-                split_x[tg].append(x_data[idx])
-                split_y[tg].append(y_data[idx])
-            for x, y in zip(split_x, split_y):
-                dpg.add_scatter_series(x, y, parent=constants.YAXIS_1)
+                split_data[tg][0].append(x_data[idx])
+                split_data[tg][1].append(y_data[idx])
+            for tg_data in split_data:
+                dpg.add_scatter_series(split_data[tg_data][0], split_data[tg_data][1], parent=constants.YAXIS_1)
 
         else:
             dpg.add_scatter_series(x_data, y_data, parent=constants.YAXIS_1)
