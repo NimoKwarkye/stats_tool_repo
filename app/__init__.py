@@ -2,7 +2,7 @@ import dearpygui.dearpygui as dpg
 
 dpg.create_context()
 
-from .import app_gui as ui
+from gui import app_gui as ui
 from .constants import VIEWPORT_WIDTH, VIEWPORT_HEIGHT, VIEWPORT_TITLE, FONT_TAG
 from .fonts import load_fonts
 

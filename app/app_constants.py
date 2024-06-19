@@ -1,4 +1,0 @@
-WIDTH = 820
-HEIGHT = 600
-WINDOWNAME = "stats tool"
-

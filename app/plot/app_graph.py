@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 import numpy as np
-import constants
+from app import constants
 
 
 from dataclasses import dataclass

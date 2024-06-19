@@ -1,9 +1,10 @@
 import dearpygui.dearpygui as dpg
 from itertools import chain
 import constants
-import algorithms as alg
+from app.algorithms import (pca)
 from sklearn import datasets
-import app_graph as gph
+from app.plot import app_graph as gph
+import numpy as np
 
 class App_Ui:
     def __init__(self):
@@ -33,13 +34,14 @@ class App_Ui:
         dpg.set_primary_window(self.primar_window, True)
     
     def pca_callback(self):
-        pca_data = alg.PCA_Input(n_components=2)
-        iris = datasets.load_iris()
-        X = iris.data
-        pca_instance = alg.PCA(pca_data, X)
-        results = pca_instance()
-        self.graph.init_plot([list(results[:, 0]), list(results[:, 1]), list(iris.target)], gph.pca_plotter)
+        with dpg.window(label="PCA Parameters Window", height=500, width=300):
+            pass
 
+    def pca_exe_callback(self, raw_data:np.ndarray, input_data: pca.PCA_Input, targets:list):
+        pca_instance = pca.PCA(input_data, raw_data)
+        results = pca_instance()
+        self.graph.init_plot([list(results[:, 0]), list(results[:, 1]), targets], gph.pca_plotter)
+        
 
     def main_menubar(self):
         with dpg.menu_bar():
