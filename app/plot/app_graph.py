@@ -69,4 +69,24 @@ class Plot_Series:
             dpg.show_item(constants.ANNOTATION_PLOT)
             self.data_ploted = False
 
+def plot_correlation_map(parent, data:np.ndarray, features:list[str]):
+    correlation_matrix = np.corrcoef(data, rowvar=False)
+    axis_vals = np.linspace(0.0, 1.0, len(features), endpoint=False)
+    axis_vals += (axis_vals[1] - axis_vals[0])/2.0
+    labels = tuple([(feature, i) for feature, i in zip(features, axis_vals)])
 
+    with dpg.plot(label="Correlation Matrix", height=400, width=-1,  parent=parent):
+        dpg.bind_colormap(dpg.last_item(), dpg.mvPlotColormap_Jet)
+        
+        x_axis = dpg.add_plot_axis(dpg.mvXAxis, lock_min=True, lock_max=True)
+        y_axis = dpg.add_plot_axis(dpg.mvYAxis, lock_min=True, lock_max=True)
+
+        values = list(correlation_matrix.flatten())
+        heat_series = dpg.add_heat_series(values, len(features), len(features), 
+                                            format="%.2f", 
+                                            parent=y_axis,
+                                            scale_min=-1.0,
+                                            scale_max=1.0)
+
+        dpg.set_axis_ticks(x_axis, labels)
+        dpg.set_axis_ticks(y_axis, labels)

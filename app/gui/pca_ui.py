@@ -28,7 +28,7 @@ class PCA_ui():
     
     def side_panel(self):
         with dpg.tab_bar():
-            with dpg.tab(label="data", id=self.data_window):
+            with dpg.tab(label="data", tag=self.data_window):
                 
                 dpg.add_button(label="...", callback=lambda: constants.file_dialog(self.import_data))
             with dpg.tab(label="analysis"):
@@ -46,11 +46,10 @@ class PCA_ui():
             dpg.add_text("Child Window 3")
     
     def import_data(self, sender, app_data):
-        file_path =  app_data["file_path_name"]
+        file_path =  app_data["selections"][list(app_data["selections"].keys())[0]]
         self.data = csv.read_data_pca(file_path, "g")
-        print(self.data)
 
-        with dpg.table(header_row=True, resizable=True, id=self.cur_displayed_data, parent=self.data_window):
+        with dpg.table(header_row=True, resizable=True, tag=self.cur_displayed_data, parent=self.data_window):
         # Add columns
             for feature in self.data["features"]:
                 dpg.add_table_column(label=feature)
@@ -60,6 +59,9 @@ class PCA_ui():
                 with dpg.table_row():
                     for cell in row:
                         dpg.add_text(f"{cell:.4f}")
+        #TODO add summary statistics
+        dpg.add_separator(parent=self.data_window)
+        gph.plot_correlation_map(self.data_window, self.data["data"], list(self.data["features"]))
 
 
 def show():

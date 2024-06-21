@@ -35,6 +35,6 @@ def adjustable_separator(child_window, width=3840, height=2, colour=(255, 255, 2
         dpg.bind_item_handler_registry(item=separator, handler_registry=item_handler)
 
 def file_dialog(callback):
-    with dpg.file_dialog(directory_selector=False, callback=callback):
-        dpg.add_file_extension(".*", color=(150, 150, 150, 255))
+    with dpg.file_dialog(label="Import Data", height=500, width=700, directory_selector=False, callback=callback):
         dpg.add_file_extension(".csv", color=(0, 255, 0, 255))
+        dpg.add_file_extension(".*", color=(150, 150, 150, 255))
