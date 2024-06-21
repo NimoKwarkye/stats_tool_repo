@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 from itertools import chain
-
+from typing import Union
 
 VIEWPORT_WIDTH = 800
 VIEWPORT_HEIGHT = 600
@@ -38,3 +38,17 @@ def file_dialog(callback):
     with dpg.file_dialog(label="Import Data", height=500, width=700, directory_selector=False, callback=callback):
         dpg.add_file_extension(".csv", color=(0, 255, 0, 255))
         dpg.add_file_extension(".*", color=(150, 150, 150, 255))
+
+def set_relative_pos(tag:Union[int, str], pos:str)->list[int]:
+    rect_size = dpg.get_item_rect_size(tag)
+    rect_pos = dpg.get_item_pos(tag)
+
+    if pos == "h_center":
+        return [rect_size[0]/2 + rect_pos[0], -1]
+    elif pos == "v_center":
+        return [0, rect_size[1]/2 + rect_pos[1]]
+    elif pos == "center":
+        return [rect_size[0]/2 + rect_pos[0], rect_size[1]/2 + rect_pos[1]]
+
+    return []
+    

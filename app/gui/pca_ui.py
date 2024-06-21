@@ -29,8 +29,10 @@ class PCA_ui():
     def side_panel(self):
         with dpg.tab_bar():
             with dpg.tab(label="data", tag=self.data_window):
-                
-                dpg.add_button(label="...", callback=lambda: constants.file_dialog(self.import_data))
+                with dpg.tree_node(label="Data Import"):
+                    dpg.add_button(label="...", 
+                                    callback=lambda: constants.file_dialog(self.import_data),
+                                    pos=constants.set_relative_pos(self.data_window, "h_center"))
             with dpg.tab(label="analysis"):
                 pass
     
@@ -49,7 +51,12 @@ class PCA_ui():
         file_path =  app_data["selections"][list(app_data["selections"].keys())[0]]
         self.data = csv.read_data_pca(file_path, "g")
 
-        with dpg.table(header_row=True, resizable=True, tag=self.cur_displayed_data, parent=self.data_window):
+        with dpg.table(header_row=True, resizable=True, 
+                            tag=self.cur_displayed_data, 
+                            parent=self.data_window, row_background=True,
+                            borders_innerH=True, borders_outerH=True, 
+                            borders_innerV=True,
+                            borders_outerV=True, delay_search=True):
         # Add columns
             for feature in self.data["features"]:
                 dpg.add_table_column(label=feature)
@@ -59,6 +66,12 @@ class PCA_ui():
                 with dpg.table_row():
                     for cell in row:
                         dpg.add_text(f"{cell:.4f}")
+            with dpg.table_row():
+                for i in range(len(self.data["features"])):
+                    mn = self.data["data"][:, i].mean()
+                    std = self.data["data"][:, i].std()
+                    dpg.add_text(f"mn = {mn:.2f}\nstd = {std:.2f}")
+
         #TODO add summary statistics
         dpg.add_separator(parent=self.data_window)
         gph.plot_correlation_map(self.data_window, self.data["data"], list(self.data["features"]))
