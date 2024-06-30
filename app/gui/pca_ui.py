@@ -9,6 +9,7 @@ class PCA_ui():
         self.data : dict = {}
         self.data_window = dpg.generate_uuid()
         self.cur_displayed_data = dpg.generate_uuid()
+        self.pca_param_window = dpg.generate_uuid()
 
     def __call__(self):
         self.main_tab()
@@ -30,12 +31,39 @@ class PCA_ui():
         with dpg.tab_bar():
             with dpg.tab(label="data", tag=self.data_window):
                 with dpg.tree_node(label="Data Import"):
-                    dpg.add_button(label="...", 
+                    with dpg.group(horizontal=True):
+                        dpg.add_checkbox(label="data has headers?", default_value=True)
+                        dpg.add_checkbox(label="features column?")
+
+                    dpg.add_button(label="load data", 
                                     callback=lambda: constants.file_dialog(self.import_data),
-                                    pos=constants.set_relative_pos(self.data_window, "h_center"))
+                            )
             with dpg.tab(label="analysis"):
-                pass
+                with dpg.tree_node(label="PCA Parameters", tag=self.pca_param_window):
+                    with dpg.group(horizontal=True):
+                        dpg.add_input_int(label="number of components", width=150)
+                        dpg.add_checkbox(label="advanced configuration", callback=self.pca_advanced_params)
+
     
+    def pca_advanced_params(self):
+        with dpg.group(parent=self.pca_param_window):
+            with dpg.group(horizontal=True, ):
+                dpg.add_input_int(label="copy", width=150)
+                dpg.add_checkbox(label="whiten")
+            with dpg.group(horizontal=True):
+                dpg.add_input_double(label="tol", width=150)                
+                dpg.add_combo(items=['auto', 'full', 'covariance_eigh', 'arpack', 'randomized'], 
+                            default_value="auto",
+                            label="svd solver", width=150)
+            with dpg.group(horizontal=True):
+                dpg.add_input_int(label="iterated power", width=150)
+                dpg.add_input_int(label="n_oversamples", width=150)
+            
+            with dpg.group(horizontal=True):
+                dpg.add_combo(label="power iteration normalizer",
+                              items=["auto", "QR", "LU", "none"], default_value="auto", width=150)
+                dpg.add_input_int(label="random state", width=150)
+
     def plot_area(self):
         with dpg.child_window(height=500, tag=constants.PLOT_WINDOW) as self.plot_window:
             #data_series = gph.Series_Data(xlabel="PC1", ylabel="PC2", plot_type="scatter")
