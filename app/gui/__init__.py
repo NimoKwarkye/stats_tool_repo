@@ -5,4 +5,3 @@ def start():
     #TODO register events
     app = ui.App_Ui()
     app()
-    return app 

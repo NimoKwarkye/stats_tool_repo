@@ -6,6 +6,7 @@ from sklearn import datasets
 from app.plot import app_graph as gph
 import numpy as np
 from app.gui import pca_ui
+from enum import Enum, auto
 
 
 # Padding around the entire content
@@ -21,65 +22,87 @@ NODE_EDITOR_PANEL_TAG = "NodeEditorPanel"
 NODE_EDITOR_TAG       = "node_editor"
 REF_NODE_TAG = "ref_node"
 node_count=0
+
+class NodeFunction(Enum):
+    DATAIMPORT = auto()
+
+class DataLoader():
+    instance = None
+    def __init__(self, parent:str):
+        self.instance_count : int = 1
+        self.parent = parent
+        self.name = "Data Loader"
+    
+
+    def __new__(self, *args, **kwargs):
+        if self.instance is None:
+            self.instance = super().__new__(self)
+        return self.instance
+    
+    def generate(self, pos: tuple[int]):
+        with dpg.node(label=f"{self.name} {self.instance_count}", parent=self.parent, pos=pos):
+            with dpg.node_attribute(label=f"Feature Data##_{node_count}", attribute_type=dpg.mvNode_Attr_Output):
+                dpg.add_text("Feature Data")
+            with dpg.node_attribute(label=f"Feature Labels##_{node_count}", attribute_type=dpg.mvNode_Attr_Output):
+                dpg.add_text("Feature Names")
+            with dpg.node_attribute(label=f"Target Data##_{node_count}", attribute_type=dpg.mvNode_Attr_Output):
+                dpg.add_text("Target Data")
+        self.instance_count +=1
+
+
 class App_Ui:
     def __init__(self):
         self.primar_window = None
         self.graph = None
-        
+        self.data_loader = DataLoader(NODE_EDITOR_TAG)
     
     def __call__(self):
-        with dpg.window(tag=MAIN_WINDOW_TAG, 
-                    label="Data Visualizer App", 
-                    no_close=True, 
-                    no_collapse=True,
-                    no_scrollbar=True,
-                    no_scroll_with_mouse=True,
-                    no_title_bar=True
-                    ):
+       
+        with dpg.window(tag=PLOT_AREA_TAG, 
+                        label="Plots", 
+                        no_close=True, 
+                        no_collapse=True,
+                        no_scrollbar=True,
+                        no_scroll_with_mouse=True):
+            dpg.add_text("Plot Area")
         
-            # -------------------------
-            # Plot Area: Top 70%
-            # -------------------------
-            with dpg.child_window(tag=PLOT_AREA_TAG, border=False):
-                dpg.add_text("Plot Area")
-                # Insert your plotting widgets here (e.g., dpg.add_plot, dpg.draw_* functions, etc.)
-            
-            # -------------------------
-            # Footer: Bottom 30%
-            # -------------------------
-            with dpg.child_window(tag=FOOTER_TAG, border=False):
-                # Group for horizontal layout in the footer.
-                with dpg.group(horizontal=True):
-                    
-                    # Pre-defined Functions Panel (Left 30%)
-                    with dpg.child_window(tag=FUNCTIONS_PANEL_TAG, border=True):
-                        dpg.add_text("Pre-defined Functions")
+        # -------------------------
+        # Footer: Bottom 30%
+        # -------------------------
+        with dpg.window(tag=FOOTER_TAG, 
+                        label="Editor", 
+                        no_close=True, 
+                        no_collapse=True, 
+                        no_scrollbar=True,
+                        no_scroll_with_mouse=True):
+            with dpg.table(header_row=False, borders_innerV=True, resizable=True):
+                dpg.add_table_column(width=300)
+                dpg.add_table_column()
+                with dpg.table_row():
+                    with dpg.child_window(tag=FUNCTIONS_PANEL_TAG, border=False):
                         with dpg.group():
-                            # Function A drag source.
-                            btn_a = dpg.add_button(label="Function A")
+                            btn_a = dpg.add_button(label="Data Loader")
                             btn_b = dpg.add_button(label="Function B")
-                            with dpg.drag_payload(parent=btn_a, payload_type="function_drag", 
-                                                drag_data={"name":"Function A", "value":dpg.mvNode_Attr_Input}):
-                                dpg.add_text("Draging Function A")
-                            # Function B drag source.
-                            with dpg.drag_payload(parent=btn_b, payload_type="function_drag", 
-                                                drag_data={"name":"Function B", "value":dpg.mvNode_Attr_Output}):
-                                dpg.add_text("Draging Function B")
+                            with dpg.drag_payload(parent=btn_a, 
+                                                drag_data={"name":"Data Loader", "value":NodeFunction.DATAIMPORT}):
+                                dpg.add_text("New Data Loader")
+                            '''with dpg.drag_payload(
+                                                    parent=btn_b, 
+                                                    drag_data={"name":"Function B", "value":dpg.mvNode_Attr_Output}):
+                                dpg.add_text("Draging Function B")'''
                     
-                    # Node Editor Panel (Right 70%)
-                    with dpg.child_window(tag=NODE_EDITOR_PANEL_TAG, border=True, drop_callback=self.drop_callback, 
-                                        payload_type="function_drag"):
+                    with dpg.child_window(
+                                            tag=NODE_EDITOR_PANEL_TAG, 
+                                            border=False, 
+                                            drop_callback=self.drop_callback,
+                                            no_scrollbar=True,
+                                            no_scroll_with_mouse=True):
                         with dpg.node_editor(tag=NODE_EDITOR_TAG, 
-                                            callback=self.link_callback, delink_callback=self.delink_callback,
+                                            callback=self.link_callback, 
+                                            delink_callback=self.delink_callback,
                                             minimap=True):
-                            # Example node inside the node editor.
-                            with dpg.node(label="Example Node"):
-                                dpg.add_node_attribute(label="Output", attribute_type=dpg.mvNode_Attr_Output)
-                                dpg.add_node_attribute(label="Input", attribute_type=dpg.mvNode_Attr_Input)
                             with dpg.node(label="giberish", tag=REF_NODE_TAG, pos=(0, 0), show=False):
-                                # No attributes needed.
                                 pass
-                            #dpg.add_drag_payload(payload_type="function_drag", callback=drop_callback, parent=NODE_EDITOR_PANEL_TAG)
     
 
     def drop_callback(self, sender, app_data, user_data):
@@ -88,34 +111,26 @@ class App_Ui:
         Creates a new node based on the function payload.
         """
         global node_count
-        # app_data is the payload sent by the drag source.
         function_name = app_data["name"]  
         node_count += 1
-        new_node_label = f"{function_name} Node {node_count}"
         global_mouse_pos = dpg.get_mouse_pos(local=False)
         
-        # Force the reference node to render so its rect is updated.
-        # If the reference node is hidden, temporarily show it.
         dpg.show_item(REF_NODE_TAG)
-        dpg.split_frame()  # Wait one frame so that its rect is computed.
+        dpg.split_frame()  
         
-        # Get the reference node's screen (rect) and grid positions.
         ref_rect_min = dpg.get_item_rect_min(REF_NODE_TAG)
         ref_grid_pos = dpg.get_item_pos(REF_NODE_TAG)
         
-        # Hide the reference node again if you want it invisible.
         dpg.hide_item(REF_NODE_TAG)
         
-        # Compute the drop position in node editor coordinates.
-        # Essentially, find the difference between the mouse and the ref node’s screen position,
-        # then add the ref node's known grid position.
         local_x = global_mouse_pos[0] - ref_rect_min[0] + ref_grid_pos[0]
         local_y = global_mouse_pos[1] - ref_rect_min[1] + ref_grid_pos[1]
-        # Create a new node in the node editor.
-        with dpg.node(label=new_node_label, parent=NODE_EDITOR_TAG, pos=(local_x, local_y)):
-            with dpg.node_attribute(label=f"Output_{node_count}", attribute_type=app_data["value"]):
-                dpg.add_text("Node text")
-        print(f"Created new node: {new_node_label}")
+        match app_data["value"]:
+            case NodeFunction.DATAIMPORT:
+                self.data_loader.generate((local_x, local_y))
+            case _:
+                raise ValueError("Invalid node function provided")
+        
 
     def resize_callback(self, sender, app_data):
         # app_data returns a tuple (width, height)
