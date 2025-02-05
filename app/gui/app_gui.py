@@ -26,30 +26,44 @@ node_count=0
 class NodeFunction(Enum):
     DATAIMPORT = auto()
     XY_DATAIMPORT = auto()
-class XY_DataLoader():
-    instance = None
+
+class BaseNodeFunctions():
+    _instances = {}
+
     def __init__(self, parent:str):
         self.instance_count : int = 0
         self.parent = parent
-        self.name = "Import XY Data"
         self.dead_instance: list[int] = []
 
     def __new__(self, *args, **kwargs):
-        if self.instance is None:
-            self.instance = super().__new__(self)
-        return self.instance
+        if self not in self._instances:
+            instance = super().__new__(self)
+            self._instances[self] = instance
+        return self._instances[self]
     
     def remove_instance(self, index:int):
         self.dead_instance.append(index)
         self.dead_instance.sort()
     
-    def generate(self, pos: tuple[int]):
+    def get_current_instance(self)->int:
         current_instance = 0
         if len(self.dead_instance) > 0:
             current_instance = self.dead_instance.pop(0)
         else:
             self.instance_count +=1
             current_instance = self.instance_count
+        return current_instance
+
+
+class XY_DataLoader(BaseNodeFunctions):
+    instance = None
+    def __init__(self, parent:str):
+        super().__init__(parent)
+        self.name = "Import XY Data"
+
+    
+    def generate(self, pos: tuple[int]):
+        current_instance = self.get_current_instance()
 
         with dpg.node(label=f"{self.name} {current_instance}", 
                       parent=self.parent, pos=pos, 
@@ -61,33 +75,14 @@ class XY_DataLoader():
                                     attribute_type=dpg.mvNode_Attr_Output,
                                     user_data="xy data loader.."):
                 dpg.add_text("XY Data")
-class DataLoader():
+class DataLoader(BaseNodeFunctions):
     instance = None
     def __init__(self, parent:str):
-        self.instance_count : int = 0
-        self.parent = parent
+        super().__init__(parent)
         self.name = "Data Loader"
-        self.dead_instance: list[int] = []
-    
-
-    def __new__(self, *args, **kwargs):
-        if self.instance is None:
-            self.instance = super().__new__(self)
-        return self.instance
-    
-    def remove_instance(self, index:int):
-        self.dead_instance.append(index)
-        self.dead_instance.sort()
-
     
     def generate(self, pos: tuple[int]):
-        current_instance = 0
-        if len(self.dead_instance) > 0:
-            current_instance = self.dead_instance.pop(0)
-        else:
-            self.instance_count +=1
-            current_instance = self.instance_count
-
+        current_instance = self.get_current_instance()
         with dpg.node(label=f"{self.name} {current_instance}", 
                       parent=self.parent, pos=pos,
                       user_data={"type":NodeFunction.DATAIMPORT, "id":current_instance}):
