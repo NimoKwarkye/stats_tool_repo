@@ -25,13 +25,49 @@ node_count=0
 
 class NodeFunction(Enum):
     DATAIMPORT = auto()
+    XY_DATAIMPORT = auto()
+class XY_DataLoader():
+    instance = None
+    def __init__(self, parent:str):
+        self.instance_count : int = 0
+        self.parent = parent
+        self.name = "Import XY Data"
+        self.dead_instance: list[int] = []
 
+    def __new__(self, *args, **kwargs):
+        if self.instance is None:
+            self.instance = super().__new__(self)
+        return self.instance
+    
+    def remove_instance(self, index:int):
+        self.dead_instance.append(index)
+        self.dead_instance.sort()
+    
+    def generate(self, pos: tuple[int]):
+        current_instance = 0
+        if len(self.dead_instance) > 0:
+            current_instance = self.dead_instance.pop(0)
+        else:
+            self.instance_count +=1
+            current_instance = self.instance_count
+
+        with dpg.node(label=f"{self.name} {current_instance}", 
+                      parent=self.parent, pos=pos, 
+                      user_data={"type":NodeFunction.XY_DATAIMPORT, "id":current_instance}):
+            with dpg.node_attribute(label=f"Y Data##_{current_instance}", 
+                                    attribute_type=dpg.mvNode_Attr_Static):
+                dpg.add_button(label="load data")
+            with dpg.node_attribute(label=f"XY Data##_{current_instance}", 
+                                    attribute_type=dpg.mvNode_Attr_Output,
+                                    user_data="xy data loader.."):
+                dpg.add_text("XY Data")
 class DataLoader():
     instance = None
     def __init__(self, parent:str):
-        self.instance_count : int = 1
+        self.instance_count : int = 0
         self.parent = parent
         self.name = "Data Loader"
+        self.dead_instance: list[int] = []
     
 
     def __new__(self, *args, **kwargs):
@@ -39,15 +75,30 @@ class DataLoader():
             self.instance = super().__new__(self)
         return self.instance
     
+    def remove_instance(self, index:int):
+        self.dead_instance.append(index)
+        self.dead_instance.sort()
+
+    
     def generate(self, pos: tuple[int]):
-        with dpg.node(label=f"{self.name} {self.instance_count}", parent=self.parent, pos=pos):
-            with dpg.node_attribute(label=f"Feature Data##_{node_count}", attribute_type=dpg.mvNode_Attr_Output):
+        current_instance = 0
+        if len(self.dead_instance) > 0:
+            current_instance = self.dead_instance.pop(0)
+        else:
+            self.instance_count +=1
+            current_instance = self.instance_count
+
+        with dpg.node(label=f"{self.name} {current_instance}", 
+                      parent=self.parent, pos=pos,
+                      user_data={"type":NodeFunction.DATAIMPORT, "id":current_instance}):
+            with dpg.node_attribute(label=f"Feature Data##_{current_instance}", attribute_type=dpg.mvNode_Attr_Output):
                 dpg.add_text("Feature Data")
-            with dpg.node_attribute(label=f"Feature Labels##_{node_count}", attribute_type=dpg.mvNode_Attr_Output):
+            with dpg.node_attribute(label=f"Feature Labels##_{current_instance}", attribute_type=dpg.mvNode_Attr_Output):
                 dpg.add_text("Feature Names")
-            with dpg.node_attribute(label=f"Target Data##_{node_count}", attribute_type=dpg.mvNode_Attr_Output):
+            with dpg.node_attribute(label=f"Target Data##_{current_instance}", 
+                                    attribute_type=dpg.mvNode_Attr_Input,
+                                    user_data="data loader.."):
                 dpg.add_text("Target Data")
-        self.instance_count +=1
 
 
 class App_Ui:
@@ -55,6 +106,12 @@ class App_Ui:
         self.primar_window = None
         self.graph = None
         self.data_loader = DataLoader(NODE_EDITOR_TAG)
+        self.xy_data_loader = XY_DataLoader(NODE_EDITOR_TAG)
+
+        with dpg.handler_registry():
+            dpg.add_key_press_handler(dpg.mvKey_Delete, 
+                                      callback=self.delete_selected_nodes, 
+                                      user_data=NODE_EDITOR_TAG)
     
     def __call__(self):
        
@@ -81,11 +138,14 @@ class App_Ui:
                 with dpg.table_row():
                     with dpg.child_window(tag=FUNCTIONS_PANEL_TAG, border=False):
                         with dpg.group():
-                            btn_a = dpg.add_button(label="Data Loader")
-                            btn_b = dpg.add_button(label="Function B")
-                            with dpg.drag_payload(parent=btn_a, 
-                                                drag_data={"name":"Data Loader", "value":NodeFunction.DATAIMPORT}):
+                            btn_data_loader = dpg.add_button(label="Data Loader")
+                            btn_xy_data_loader = dpg.add_button(label="Import XY Data")
+                            with dpg.drag_payload(parent=btn_data_loader, 
+                                                drag_data={"value":NodeFunction.DATAIMPORT}):
                                 dpg.add_text("New Data Loader")
+                            with dpg.drag_payload(parent=btn_xy_data_loader, 
+                                                drag_data={"value":NodeFunction.XY_DATAIMPORT}):
+                                dpg.add_text("New XY Data Loader")
                             '''with dpg.drag_payload(
                                                     parent=btn_b, 
                                                     drag_data={"name":"Function B", "value":dpg.mvNode_Attr_Output}):
@@ -104,15 +164,25 @@ class App_Ui:
                             with dpg.node(label="giberish", tag=REF_NODE_TAG, pos=(0, 0), show=False):
                                 pass
     
+    def delete_selected_nodes(self, sender, app_data, user_data):
+        node_editor_tag = user_data
+        selected_nodes = dpg.get_selected_nodes(node_editor_tag)
+        for node_id in selected_nodes:
+            node_data = dpg.get_item_user_data(node_id)
+            match node_data["type"]:
+                case NodeFunction.DATAIMPORT:
+                    self.data_loader.remove_instance(node_data["id"])
+                case NodeFunction.XY_DATAIMPORT:
+                    self.xy_data_loader.remove_instance(node_data["id"])
+                case _:
+                    pass
+            dpg.delete_item(node_id)
 
     def drop_callback(self, sender, app_data, user_data):
         """
         Called when a function drag payload is dropped on the node editor area.
         Creates a new node based on the function payload.
         """
-        global node_count
-        function_name = app_data["name"]  
-        node_count += 1
         global_mouse_pos = dpg.get_mouse_pos(local=False)
         
         dpg.show_item(REF_NODE_TAG)
@@ -128,6 +198,8 @@ class App_Ui:
         match app_data["value"]:
             case NodeFunction.DATAIMPORT:
                 self.data_loader.generate((local_x, local_y))
+            case NodeFunction.XY_DATAIMPORT:
+                self.xy_data_loader.generate((local_x, local_y))
             case _:
                 raise ValueError("Invalid node function provided")
         
@@ -161,6 +233,8 @@ class App_Ui:
 
     def link_callback(self, sender, app_data):
         # app_data -> (link_id1, link_id2)
+        print(dpg.get_item_user_data(app_data[0]))
+        print(dpg.get_item_user_data(app_data[1]))
         dpg.add_node_link(app_data[0], app_data[1], parent=sender)
 
     # callback runs when user attempts to disconnect attributes
