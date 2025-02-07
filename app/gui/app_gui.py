@@ -26,6 +26,7 @@ node_count=0
 class NodeFunction(Enum):
     DATAIMPORT = auto()
     XY_DATAIMPORT = auto()
+    LINEARREGRESSION = auto()
 
 class BaseNodeFunctions():
     _instances = {}
@@ -34,6 +35,7 @@ class BaseNodeFunctions():
         self.instance_count : int = 0
         self.parent = parent
         self.dead_instance: list[int] = []
+        
 
     def __new__(self, *args, **kwargs):
         if self not in self._instances:
@@ -53,14 +55,51 @@ class BaseNodeFunctions():
             self.instance_count +=1
             current_instance = self.instance_count
         return current_instance
+    def get_attr_user_data(self, _name, tp, kind, friends):
+        return {
+            "id":_name,
+            "type":tp,
+            "kind":kind,
+            "friends":friends
+        }
+
+
+class LinearRegression(BaseNodeFunctions):
+    def __init__(self, parent:str):
+        super().__init__(parent)
+        self.name = "Linear Regression"
+        self.identifier = "slr"
+
+    
+    def generate(self, pos: tuple[int]):
+        current_instance = self.get_current_instance()
+
+        with dpg.node(label=f"{self.name} {current_instance}", 
+                      parent=self.parent, pos=pos, 
+                      user_data={"type":NodeFunction.LINEARREGRESSION, "id":current_instance}):
+            with dpg.node_attribute(label=f"XY Data##regress_{current_instance}", 
+                                    attribute_type=dpg.mvNode_Attr_Input,
+                                    user_data=self.get_attr_user_data(self.identifier, 
+                                                                      NodeFunction.LINEARREGRESSION,
+                                                                      "in", ["xy_data"])):
+                dpg.add_text("XY Data")
+            with dpg.node_attribute(label=f"fitting Data##_{current_instance}", 
+                                    attribute_type=dpg.mvNode_Attr_Static):
+                dpg.add_button(label="fit")
+
+            with dpg.node_attribute(label=f"fitting Data##_{current_instance}", 
+                                    attribute_type=dpg.mvNode_Attr_Output,
+                                    user_data=self.get_attr_user_data(self.identifier, 
+                                                                      NodeFunction.LINEARREGRESSION,
+                                                                      "out", [])):
+                dpg.add_text("model")
 
 
 class XY_DataLoader(BaseNodeFunctions):
-    instance = None
     def __init__(self, parent:str):
         super().__init__(parent)
         self.name = "Import XY Data"
-
+        self.identifier = "xy_data"
     
     def generate(self, pos: tuple[int]):
         current_instance = self.get_current_instance()
@@ -73,26 +112,38 @@ class XY_DataLoader(BaseNodeFunctions):
                 dpg.add_button(label="load data")
             with dpg.node_attribute(label=f"XY Data##_{current_instance}", 
                                     attribute_type=dpg.mvNode_Attr_Output,
-                                    user_data="xy data loader.."):
+                                    user_data=self.get_attr_user_data(self.identifier, 
+                                                                      NodeFunction.XY_DATAIMPORT,
+                                                                      "out", ["slr"])):
                 dpg.add_text("XY Data")
 class DataLoader(BaseNodeFunctions):
-    instance = None
     def __init__(self, parent:str):
         super().__init__(parent)
         self.name = "Data Loader"
-    
+        self.identifier = "ld_data"
+
     def generate(self, pos: tuple[int]):
         current_instance = self.get_current_instance()
         with dpg.node(label=f"{self.name} {current_instance}", 
                       parent=self.parent, pos=pos,
                       user_data={"type":NodeFunction.DATAIMPORT, "id":current_instance}):
-            with dpg.node_attribute(label=f"Feature Data##_{current_instance}", attribute_type=dpg.mvNode_Attr_Output):
+            with dpg.node_attribute(label=f"Feature Data##_{current_instance}", 
+                                    attribute_type=dpg.mvNode_Attr_Output,
+                                    user_data=self.get_attr_user_data(self.identifier,
+                                                                      NodeFunction.DATAIMPORT,
+                                                                      "out", [])):
                 dpg.add_text("Feature Data")
-            with dpg.node_attribute(label=f"Feature Labels##_{current_instance}", attribute_type=dpg.mvNode_Attr_Output):
+            with dpg.node_attribute(label=f"Feature Labels##_{current_instance}", 
+                                    attribute_type=dpg.mvNode_Attr_Output,
+                                    user_data=self.get_attr_user_data(self.identifier,
+                                                                      NodeFunction.DATAIMPORT,
+                                                                      "out", [])):
                 dpg.add_text("Feature Names")
             with dpg.node_attribute(label=f"Target Data##_{current_instance}", 
                                     attribute_type=dpg.mvNode_Attr_Input,
-                                    user_data="data loader.."):
+                                    user_data=self.get_attr_user_data(self.identifier,
+                                                                      NodeFunction.DATAIMPORT,
+                                                                      "in", [])):
                 dpg.add_text("Target Data")
 
 
@@ -102,6 +153,7 @@ class App_Ui:
         self.graph = None
         self.data_loader = DataLoader(NODE_EDITOR_TAG)
         self.xy_data_loader = XY_DataLoader(NODE_EDITOR_TAG)
+        self.lin_regression = LinearRegression(NODE_EDITOR_TAG)
 
         with dpg.handler_registry():
             dpg.add_key_press_handler(dpg.mvKey_Delete, 
@@ -135,12 +187,16 @@ class App_Ui:
                         with dpg.group():
                             btn_data_loader = dpg.add_button(label="Data Loader")
                             btn_xy_data_loader = dpg.add_button(label="Import XY Data")
+                            btn_linear_regression = dpg.add_button(label="Simple LR")
                             with dpg.drag_payload(parent=btn_data_loader, 
                                                 drag_data={"value":NodeFunction.DATAIMPORT}):
                                 dpg.add_text("New Data Loader")
                             with dpg.drag_payload(parent=btn_xy_data_loader, 
                                                 drag_data={"value":NodeFunction.XY_DATAIMPORT}):
                                 dpg.add_text("New XY Data Loader")
+                            with dpg.drag_payload(parent=btn_linear_regression, 
+                                                drag_data={"value":NodeFunction.LINEARREGRESSION}):
+                                dpg.add_text("Add a Simple Linear Regression Node")
                             '''with dpg.drag_payload(
                                                     parent=btn_b, 
                                                     drag_data={"name":"Function B", "value":dpg.mvNode_Attr_Output}):
@@ -169,6 +225,8 @@ class App_Ui:
                     self.data_loader.remove_instance(node_data["id"])
                 case NodeFunction.XY_DATAIMPORT:
                     self.xy_data_loader.remove_instance(node_data["id"])
+                case NodeFunction.LINEARREGRESSION:
+                    self.lin_regression.remove_instance(node_data["id"])
                 case _:
                     pass
             dpg.delete_item(node_id)
@@ -195,6 +253,8 @@ class App_Ui:
                 self.data_loader.generate((local_x, local_y))
             case NodeFunction.XY_DATAIMPORT:
                 self.xy_data_loader.generate((local_x, local_y))
+            case NodeFunction.LINEARREGRESSION:
+                self.lin_regression.generate((local_x, local_y))
             case _:
                 raise ValueError("Invalid node function provided")
         
@@ -228,9 +288,13 @@ class App_Ui:
 
     def link_callback(self, sender, app_data):
         # app_data -> (link_id1, link_id2)
-        print(dpg.get_item_user_data(app_data[0]))
-        print(dpg.get_item_user_data(app_data[1]))
-        dpg.add_node_link(app_data[0], app_data[1], parent=sender)
+        first_node = dpg.get_item_user_data(app_data[0])
+        second_node = dpg.get_item_user_data(app_data[1])
+        if first_node["type"] != second_node["type"] and \
+            first_node["kind"] != second_node["kind"] and \
+                first_node["id"] in second_node["friends"]:
+            #TODO run logic of sending data through links
+            dpg.add_node_link(app_data[0], app_data[1], parent=sender)
 
     # callback runs when user attempts to disconnect attributes
     def delink_callback(self, sender, app_data):
