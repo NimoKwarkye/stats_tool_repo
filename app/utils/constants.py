@@ -7,7 +7,7 @@ VIEWPORT_HEIGHT = 600
 VIEWPORT_TITLE = "Stats Tool"
 
 FONT_SIZE = 18
-FONT_FILE = "assets/fonts/Roboto-Regular.ttf"
+FONT_FILE = "../assets/fonts/Roboto-Regular.ttf"
 FONT_TAG = dpg.generate_uuid()
 PLOT_WINDOW = dpg.generate_uuid()
 YAXIS_1 = dpg.generate_uuid()
