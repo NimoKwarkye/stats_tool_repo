@@ -11,6 +11,7 @@ class Node(ABC):
         self.output_ports : list[Port] = []   # Mapping from output port name to computed value.
         self.params = {}    # Configuration parameters for the node.
         self.position = []
+        self.node_index = 0
 
     
     def add_input_port(self, name, port_type):
@@ -46,6 +47,7 @@ class Node(ABC):
         for idx, port in enumerate(self.input_ports):
             if port.name == port_name:
                 self.input_ports[idx].port_open = True
+                print("opened port ", port_name)
 
 
     @abstractmethod

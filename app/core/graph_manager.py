@@ -62,7 +62,7 @@ class GraphManager:
     def remove_node(self, node_id):
         for con in self.connections:
             if node_id in con:
-                self.nodes[con[2]].open_port(con[2])
+                self.nodes[con[2]].open_port(con[3])
         self.connections = [con for con in self.connections if node_id not in con]
         self.nodes.pop(node_id)
 
