@@ -5,13 +5,12 @@ dpg.configure_app(docking=True, docking_space=True)
 
 from app.ui import node_editor
 from app.utils.constants import VIEWPORT_WIDTH, VIEWPORT_HEIGHT, VIEWPORT_TITLE, FONT_TAG
-from app.utils.fonts import load_fonts
+from app.utils import utils
 
 
 
 def run():
-    load_fonts()
-    dpg.bind_font(FONT_TAG)
+    utils.init()
     node_editor.setup_ui()
     dpg.create_viewport(title=VIEWPORT_TITLE, width=VIEWPORT_WIDTH, height=VIEWPORT_HEIGHT)
     

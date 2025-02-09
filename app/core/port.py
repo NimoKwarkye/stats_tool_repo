@@ -6,7 +6,7 @@ class Port:
         self.name = name            # e.g. "data", "labels", "model"
         self.port_type = port_type  # e.g. "DataFrame", "Series", "Model"
         self.direction = direction  # "in" or "out"
-        self.value = None
+        self.value = []
         self.port_open = True
 
     def __repr__(self):

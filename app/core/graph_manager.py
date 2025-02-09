@@ -73,15 +73,42 @@ class GraphManager:
         self.connections = [con for con in self.connections if port_name not in con]
 
 
-
-    def topological_sort(self):
-        # For demonstration, we assume nodes can be executed in the order they were added.
-        return list(self.nodes.values())
-
     def execute(self):
-        print("GraphManager: Executing graph...")
-        for node in self.topological_sort():
+        """
+        Executes only the nodes that are part of a connected subgraph.
+        Execution is done in topological order.
+        """
+        print("GraphManager: Executing connected nodes...")
+        if not self.connections:
+            print("GraphManager: No connections found.")
+            return
+
+        # Compute the number of incoming connections for each node.
+        incoming_count = {node_id: 0 for node_id in self.nodes}
+        for source_id, _, target_id, _ in self.connections:
+            incoming_count[target_id] += 1
+
+        # Collect source nodes: those with zero incoming connections and that are connected.
+        # (If no such node exists, default to all nodes acting as source connection.)
+        queue  = [node for node in self.nodes.values()
+                 if incoming_count[node.node_id] == 0 and any(node.node_id in conn for conn in self.connections)]
+        if not queue:
+            queue = [node for node in self.nodes.values() if node.node_id == conn[0] for conn in self.connections]
+        
+        # Topologically sort using Kahn's algorithm.
+        sorted_nodes = []
+        while queue:
+            node = queue.pop(0)
+            sorted_nodes.append(node)
+            for source_id, _, target_id, _ in self.connections:
+                if source_id == node.node_id:
+                    incoming_count[target_id] -= 1
+                    if incoming_count[target_id] == 0:
+                        queue.append(self.nodes[target_id])
+        
+        # Execute nodes in sorted order.
+        for node in sorted_nodes:
             try:
                 node.compute()
             except Exception as e:
-                print(f"Error computing node {node.node_id}: {e}")
+                print(f"Error executing node {node.node_id}: {e}")

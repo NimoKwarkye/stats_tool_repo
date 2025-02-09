@@ -4,6 +4,7 @@ from app.core.graph_manager import GraphManager
 from app.core.node_factory import NodeFactory
 from app.nodes.data_import_node import CSVImportNode
 from app.nodes.linear_regression_node import LinearRegressionNode
+from app.nodes.data_plots_nodes import XYScatterPlotNode
 
 
 MAIN_WINDOW_TAG       = "MainWindow"
@@ -19,6 +20,7 @@ CSV_RADIO_TAG         = "csv_radio"
 REF_NODE_TAG = "ref_node"
 CSVIMPORT_DRAG_ID = "CSVImport"
 LINEAR_REG_DRAG_ID = "LinRegression"
+SCATTER_PLOT_DRAG_ID = "ScatterPlot"
 
 
 graph_manager = GraphManager()
@@ -26,6 +28,7 @@ node_factory = NodeFactory()
 
 node_factory.register_prototype(CSVIMPORT_DRAG_ID, CSVImportNode("proto_csv"))
 node_factory.register_prototype(LINEAR_REG_DRAG_ID, LinearRegressionNode("proto_lin_reg"))
+node_factory.register_prototype(SCATTER_PLOT_DRAG_ID, XYScatterPlotNode("proto_scatter_plot"))
 
 
 def get_relative_mouse_pos(ref_object:str):
@@ -69,14 +72,14 @@ def csv_import_callback(sender, app_data, user_data):
         node_instance.params["csv_sep"] = ";"
     elif radio_tag == "colon":
         node_instance.params["csv_sep"] = ":"
-        
+
 
 
 def add_node_popup(node_instance:Node):
 
     if node_instance.__class__.__name__ == "CSVImportNode":
 
-        with dpg.popup(parent=node_instance.node_id, tag=f"{POP_UP_TAG}_{node_instance.node_id}"):
+        with dpg.popup(parent=node_instance.node_id, tag=f"{POP_UP_TAG}_{node_instance.node_id}", modal=True):
             dpg.add_text("CSV Import Node")
             dpg.add_text("Select a CSV file to import.")
             with dpg.group(horizontal=True):
@@ -172,6 +175,7 @@ def setup_ui():
                         btn_data_loader = dpg.add_button(label="Data Loader")
                         btn_xy_data_loader = dpg.add_button(label="Import XY Data")
                         btn_linear_regression = dpg.add_button(label="Simple LR")
+                        btn_xy_scatter = dpg.add_button(label="XY Scatter Plot")
                         with dpg.drag_payload(parent=btn_data_loader):
                             dpg.add_text("New Data Loader")
                         with dpg.drag_payload(parent=btn_xy_data_loader,
@@ -180,6 +184,9 @@ def setup_ui():
                         with dpg.drag_payload(parent=btn_linear_regression,
                                               drag_data=LINEAR_REG_DRAG_ID):
                             dpg.add_text("Add a Simple Linear Regression Node")
+                        with dpg.drag_payload(parent=btn_xy_scatter,
+                                              drag_data=SCATTER_PLOT_DRAG_ID):
+                            dpg.add_text("Add a XY Scatter Plot Node")
                         '''with dpg.drag_payload(
                                                 parent=btn_b, 
                                                 drag_data={"name":"Function B", "value":dpg.mvNode_Attr_Output}):
@@ -191,6 +198,7 @@ def setup_ui():
                                         drop_callback=add_node_callback,
                                         no_scrollbar=True,
                                         no_scroll_with_mouse=True):
+                    dpg.add_button(label="execute", callback=lambda: graph_manager.execute())
                     with dpg.node_editor(tag=NODE_EDITOR_TAG, 
                                         callback=link_callback, 
                                         delink_callback=delink_callback,

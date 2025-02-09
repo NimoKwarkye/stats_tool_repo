@@ -13,7 +13,12 @@ class CSVImportNode(Node):
         self.add_output_port("labels", "Series")
 
     def compute(self):
-        filepath = self.params.get("filepath")
+        print(f"[{self.node_id}] Computing...")
+        for port in self.output_ports:
+            if port.name == "data":
+                port.value.clear()
+                port.value.append(f"{self.node_id}_df") 
+        '''filepath = self.params.get("filepath")
         if not filepath:
             raise ValueError("CSVImportNode: 'filepath' parameter is not set.")
         if not os.path.exists(filepath):
@@ -27,5 +32,5 @@ class CSVImportNode(Node):
         for port in self.output_ports:
             if port.name == "data":
                 port.value = df
-        print(f"[{self.node_id}] Imported data from {filepath}")
-        return df
+        print(f"[{self.node_id}] Imported data from {filepath}")'''
+        return True
