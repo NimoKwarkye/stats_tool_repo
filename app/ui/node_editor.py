@@ -6,22 +6,11 @@ from app.nodes.data_import_node import CSVImportNode
 from app.nodes.linear_regression_node import LinearRegressionNode
 from app.nodes.data_plots_nodes import XYScatterPlotNode
 from app.ui import plot_area 
+from app.utils.constants import EDITOR_TAG, FUNCTIONS_PANEL_TAG, NODE_EDITOR_PANEL_TAG, \
+                                NODE_EDITOR_TAG, OPENFILE_DIALOG_TAG, INPUT_TEXT_TAG, \
+                                POP_UP_TAG, CSV_RADIO_TAG, REF_NODE_TAG, CSVIMPORT_DRAG_ID, \
+                                LINEAR_REG_DRAG_ID, SCATTER_PLOT_DRAG_ID
 
-
-MAIN_WINDOW_TAG       = "MainWindow"
-
-FOOTER_TAG            = "Footer"
-FUNCTIONS_PANEL_TAG   = "FunctionsPanel"
-NODE_EDITOR_PANEL_TAG = "NodeEditorPanel"
-NODE_EDITOR_TAG       = "node_editor"
-OPENFILE_DIALOG_TAG   = "open_file_dialog"
-INPUT_TEXT_TAG        = "input_text"
-POP_UP_TAG            = "pop_up"
-CSV_RADIO_TAG         = "csv_radio"
-REF_NODE_TAG = "ref_node"
-CSVIMPORT_DRAG_ID = "CSVImport"
-LINEAR_REG_DRAG_ID = "LinRegression"
-SCATTER_PLOT_DRAG_ID = "ScatterPlot"
 
 
 graph_manager = GraphManager()
@@ -155,7 +144,7 @@ def setup_ui():
         # -------------------------
         # Footer: Bottom 30%
         # -------------------------
-    with dpg.window(tag=FOOTER_TAG, 
+    with dpg.window(tag=EDITOR_TAG, 
                     label="Editor", 
                     no_close=True, 
                     no_collapse=True, 
