@@ -5,10 +5,11 @@ from app.core.node_factory import NodeFactory
 from app.nodes.data_import_node import CSVImportNode
 from app.nodes.linear_regression_node import LinearRegressionNode
 from app.nodes.data_plots_nodes import XYScatterPlotNode
+from app.ui import plot_area 
 
 
 MAIN_WINDOW_TAG       = "MainWindow"
-PLOT_AREA_TAG         = "PlotArea"
+
 FOOTER_TAG            = "Footer"
 FUNCTIONS_PANEL_TAG   = "FunctionsPanel"
 NODE_EDITOR_PANEL_TAG = "NodeEditorPanel"
@@ -149,14 +150,8 @@ def setup_ui():
         dpg.add_key_press_handler(dpg.mvKey_Delete, 
                                     callback=delete_selected_nodes, 
                                     user_data=NODE_EDITOR_TAG)
-    with dpg.window(tag=PLOT_AREA_TAG, 
-                        label="Plots", 
-                        no_close=True, 
-                        no_collapse=True,
-                        no_scrollbar=True,
-                        no_scroll_with_mouse=True):
-            dpg.add_text("Plot Area")
-        
+    
+    plot_area.plot_setup()  
         # -------------------------
         # Footer: Bottom 30%
         # -------------------------
