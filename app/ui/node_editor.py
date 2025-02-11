@@ -9,7 +9,7 @@ from app.ui import plot_area
 from app.utils.constants import EDITOR_TAG, FUNCTIONS_PANEL_TAG, NODE_EDITOR_PANEL_TAG, \
                                 NODE_EDITOR_TAG, OPENFILE_DIALOG_TAG, INPUT_TEXT_TAG, \
                                 POP_UP_TAG, CSV_RADIO_TAG, REF_NODE_TAG, CSVIMPORT_DRAG_ID, \
-                                LINEAR_REG_DRAG_ID, SCATTER_PLOT_DRAG_ID
+                                LINEAR_REG_DRAG_ID, SCATTER_PLOT_DRAG_ID, PLOT_1_TAG
 
 
 
@@ -20,6 +20,12 @@ node_factory.register_prototype(CSVIMPORT_DRAG_ID, CSVImportNode("proto_csv"))
 node_factory.register_prototype(LINEAR_REG_DRAG_ID, LinearRegressionNode("proto_lin_reg"))
 node_factory.register_prototype(SCATTER_PLOT_DRAG_ID, XYScatterPlotNode("proto_scatter_plot"))
 
+def execude_graph():
+    if graph_manager.execute():
+        print("Graph executed successfully.")
+        plot_node : Node = graph_manager.get_node(SCATTER_PLOT_DRAG_ID + "_1")
+        if plot_node is not None:
+            plot_area.line_plot(PLOT_1_TAG, plot_node.params)
 
 def get_relative_mouse_pos(ref_object:str):
     global_mouse_pos = dpg.get_mouse_pos(local=False)
@@ -182,7 +188,7 @@ def setup_ui():
                                         drop_callback=add_node_callback,
                                         no_scrollbar=True,
                                         no_scroll_with_mouse=True):
-                    dpg.add_button(label="execute", callback=lambda: graph_manager.execute())
+                    dpg.add_button(label="execute", callback=lambda: execude_graph())
                     with dpg.node_editor(tag=NODE_EDITOR_TAG, 
                                         callback=link_callback, 
                                         delink_callback=delink_callback,

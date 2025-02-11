@@ -5,9 +5,20 @@ from app.core.node import Node
 class XYScatterPlotNode(Node):
     def __init__(self, node_id, name="XY Scatter Plot"):
         super().__init__(node_id, name)
-        self.params = {"x": None, "y": None, "trend line":None, "title": None}
+        self.params = {
+                    "x": None, 
+                    "y": None, 
+                    "trend_line":[], 
+                    "title": None, 
+                    "xlabel": "x", 
+                    "ylabel": "y",
+                    "type": "scatter"
+                    }
         self.add_input_port("data", "DataFrame")
         self.add_input_port("fit", "Model")
+
+
+    
 
     def compute(self):
         print(f"[{self.node_id}] Computing...")
@@ -17,11 +28,16 @@ class XYScatterPlotNode(Node):
             if port.name == "data" and len(port.value) > 0:
                 port_data = port.value[0]
             elif port.name == "fit" and len(port.value) > 0:
-                port_fit = port.value[0]
+                port_fit = port.value
+        
         if port_data is None:
+            print("No data")
             return False
         #set the x and y values from port_data
         #if port_fit is not None, set the trend line
-        print(f"plotted {port_data} with {port_fit}")
-
+        self.params["x"] = list(port_data[:, 0])
+        self.params["y"] = list(port_data[:, 1])
+        if port_fit is not None:
+            self.params["trend_line"].append(port_fit[0])
+            self.params["trend_line"].append(port_fit[1])
         return True

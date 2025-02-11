@@ -73,6 +73,9 @@ class GraphManager:
         self.connections = [con for con in self.connections if port_name not in con]
 
 
+    def get_node(self, node_id):
+        return self.nodes.get(node_id)
+
     def execute(self):
         """
         Executes only the nodes that are part of a connected subgraph.
@@ -81,7 +84,7 @@ class GraphManager:
         print("GraphManager: Executing connected nodes...")
         if not self.connections:
             print("GraphManager: No connections found.")
-            return
+            return False
 
         # Compute the number of incoming connections for each node.
         incoming_count = {node_id: 0 for node_id in self.nodes}
@@ -112,3 +115,5 @@ class GraphManager:
                 node.compute()
             except Exception as e:
                 print(f"Error executing node {node.node_id}: {e}")
+                return False
+        return True

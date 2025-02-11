@@ -9,18 +9,25 @@ class LinearRegressionNode(Node):
         self.add_input_port("data", "DataFrame")
         self.add_output_port("fit", "Model")
 
+    def fit(self, data):
+        prd = self.params["slope"] * data[:, 0] + self.params["intercept"]
+        return prd
+
     def compute(self):
         print(f"[{self.node_id}] Computing...")
         port_data = None
         for port in self.input_ports:
             if port.name == "data" and len(port.value) > 0:
                 #get data from the input port
-                port_data = port.value
-                print(port_data)
+                port_data = port.value[0]
         #use the data to compute the slope and intercept
+        if port_data is None:
+            return False
+        self.params["slope"], self.params["intercept"] = np.polyfit(port_data[:, 0], port_data[:, 1], 1)
         for port in self.output_ports:
             if port.name == "fit":
                 port.value.clear()
-                port.value.append(f"{self.node_id}_fit")
+                port.value.append(list(port_data[:, 0]))
+                port.value.append(list(self.fit(port_data)))
             
         return True

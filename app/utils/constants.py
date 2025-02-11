@@ -28,5 +28,14 @@ REF_NODE_TAG = "ref_node"
 OPENFILE_DIALOG_TAG = "open_file_dialog"
 INPUT_TEXT_TAG = "input_text"
 
+PLOT_1_TAG = "plot_1"
+PLOT_2_TAG = "plot_2"
+PLOT_3_TAG = "plot_3"
+PLOT_4_TAG = "plot_4"
+PLOT_5_TAG = "plot_5"
+PLOT_6_TAG = "plot_6"
+
+EMPTY_PLOT = "empty_plot"
+
 
     
