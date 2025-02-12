@@ -27,6 +27,10 @@ class NodeFactory:
             self.prototypes_count[type_name]["count"] += 1
         
         new_node.position = position
+        for port in new_node.input_ports:
+            port.name+= "##" + new_node.node_id
+        for port in new_node.output_ports:
+            port.name+= "##" + new_node.node_id
         return new_node
 
     def delete_node(self, type_name, node_index):

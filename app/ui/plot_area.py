@@ -10,18 +10,27 @@ def no_data_plot(parent:str):
     dpg.set_axis_limits(parent +"_y", 0, 1)
     dpg.add_plot_annotation(label="No Data Available", default_value=(0.5, 0.5), tag=parent +"_main", parent=parent)
 
-def line_plot(parent:str, node_params):
+def scatter_plot(parent:str, node_params):
     dpg.delete_item(parent + "_main")
     dpg.delete_item(parent + "_main_fit")
     dpg.set_item_label(parent + "_x", node_params["xlabel"])
     dpg.set_item_label(parent + "_y", node_params["ylabel"])
-    dpg.set_axis_limits_auto(parent +"_x")
-    dpg.set_axis_limits_auto(parent +"_y")
+    dpg.set_axis_limits(parent +"_y", min(node_params["y"]), max(node_params["y"]))
+    dpg.set_axis_limits(parent +"_x", min(node_params["x"]), max(node_params["x"])) # lock axis limits so annotation is centered
     dpg.add_scatter_series(node_params["x"], node_params["y"], label=node_params["title"], 
                            tag=parent +"_main", parent=parent + "_y")
+    
     if(len(node_params["trend_line"]) > 0):
         dpg.add_line_series(node_params["trend_line"][0], node_params["trend_line"][1], 
                             label="fit", tag=parent +"_main_fit", parent=parent+ "_y")
+    dpg.set_axis_limits_auto(parent +"_x")
+    dpg.set_axis_limits_auto(parent +"_y")
+
+def plot_themes():
+    with dpg.theme() as theme:
+        with dpg.theme_component(dpg.mvLineSeries):
+            dpg.add_theme_color(dpg.mvPlotCol_Line, (244, 162, 97), category=dpg.mvThemeCat_Plots)
+            dpg.add_theme_style(dpg.mvPlotStyleVar_LineWeight, 3, category=dpg.mvThemeCat_Plots)
 
 
 def plot_setup():

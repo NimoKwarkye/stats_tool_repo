@@ -66,11 +66,12 @@ class GraphManager:
         self.connections = [con for con in self.connections if node_id not in con]
         self.nodes.pop(node_id)
 
-    def disconnect(self, port_name):
+    def disconnect(self, source_port_name, target_port_name):
         for con in self.connections:
-            if port_name in con:
-                self.nodes[con[2]].open_port(port_name)
-        self.connections = [con for con in self.connections if port_name not in con]
+            if source_port_name in con and target_port_name in con:
+                self.nodes[con[2]].open_port(target_port_name)
+        self.connections = [con for con in self.connections if source_port_name \
+                            not in con and target_port_name not in con] 
 
 
     def get_node(self, node_id):
@@ -82,7 +83,7 @@ class GraphManager:
         Execution is done in topological order.
         """
         print("GraphManager: Executing connected nodes...")
-        if not self.connections:
+        if  len(self.connections) == 0:
             print("GraphManager: No connections found.")
             return False
 

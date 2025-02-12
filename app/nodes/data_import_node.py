@@ -27,6 +27,6 @@ class CSVImportNode(Node):
             pass
         # Store the result in the output port.
         for port in self.output_ports:
-            if port.name == "data":
+            if port.name.split("##")[0] == "data":
                 port.value.append(df.to_numpy())
         return True

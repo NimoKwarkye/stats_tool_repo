@@ -5,6 +5,7 @@ from app.core.node import Node
 class XYScatterPlotNode(Node):
     def __init__(self, node_id, name="XY Scatter Plot"):
         super().__init__(node_id, name)
+        self.has_data = False
         self.params = {
                     "x": None, 
                     "y": None, 
@@ -12,7 +13,10 @@ class XYScatterPlotNode(Node):
                     "title": None, 
                     "xlabel": "x", 
                     "ylabel": "y",
-                    "type": "scatter"
+                    "type": "scatter",
+                    "region": None,
+                    "marker_color": None,
+                    "line_color": None,
                     }
         self.add_input_port("data", "DataFrame")
         self.add_input_port("fit", "Model")
@@ -25,9 +29,9 @@ class XYScatterPlotNode(Node):
         port_data = None
         port_fit = None
         for port in self.input_ports:
-            if port.name == "data" and len(port.value) > 0:
+            if port.name.split("##")[0] == "data" and len(port.value) > 0:
                 port_data = port.value[0]
-            elif port.name == "fit" and len(port.value) > 0:
+            elif port.name.split("##")[0]=="fit" and len(port.value) > 0:
                 port_fit = port.value
         
         if port_data is None:
@@ -40,4 +44,5 @@ class XYScatterPlotNode(Node):
         if port_fit is not None:
             self.params["trend_line"].append(port_fit[0])
             self.params["trend_line"].append(port_fit[1])
+        self.has_data = True
         return True

@@ -9,7 +9,11 @@ from app.ui import plot_area
 from app.utils.constants import EDITOR_TAG, FUNCTIONS_PANEL_TAG, NODE_EDITOR_PANEL_TAG, \
                                 NODE_EDITOR_TAG, OPENFILE_DIALOG_TAG, INPUT_TEXT_TAG, \
                                 POP_UP_TAG, CSV_RADIO_TAG, REF_NODE_TAG, CSVIMPORT_DRAG_ID, \
-                                LINEAR_REG_DRAG_ID, SCATTER_PLOT_DRAG_ID, PLOT_1_TAG
+                                LINEAR_REG_DRAG_ID, SCATTER_PLOT_DRAG_ID, PLOT_1_TAG,\
+                                PLOT_2_TAG, PLOT_3_TAG, PLOT_4_TAG, PLOT_5_TAG, PLOT_6_TAG, \
+                                INPUT_TEXT_TAG, PLOT_TITLE_TEXT_TAG, XLABEL_TEXT_TAG, YLABEL_TEXT_TAG, \
+                                PLOT_TYPE_RADIO_TAG, PLOT_REGION_TAG, PLOT_MARKER_COLOR_TAG, \
+                                PLOT_LINE_COLOR_TAG, PLOT_COLORMAP_TAG
 
 
 
@@ -23,9 +27,12 @@ node_factory.register_prototype(SCATTER_PLOT_DRAG_ID, XYScatterPlotNode("proto_s
 def execude_graph():
     if graph_manager.execute():
         print("Graph executed successfully.")
-        plot_node : Node = graph_manager.get_node(SCATTER_PLOT_DRAG_ID + "_1")
-        if plot_node is not None:
-            plot_area.line_plot(PLOT_1_TAG, plot_node.params)
+        for node_id in graph_manager.nodes.keys():
+            node:Node = graph_manager.get_node(node_id)
+            if node.__class__.__name__ == "XYScatterPlotNode":
+                if node.has_data:
+                    plot_area.scatter_plot(node.params["region"], node.params)
+        
 
 def get_relative_mouse_pos(ref_object:str):
     global_mouse_pos = dpg.get_mouse_pos(local=False)
@@ -69,13 +76,32 @@ def csv_import_callback(sender, app_data, user_data):
     elif radio_tag == "colon":
         node_instance.params["csv_sep"] = ":"
 
-
+def scatter_plot_callback(sender, app_data, user_data):
+    node_instance:Node = user_data
+    node_instance.params["title"] = dpg.get_value(f"{PLOT_TITLE_TEXT_TAG}_{node_instance.node_id}")
+    node_instance.params["xlabel"] = dpg.get_value(f"{XLABEL_TEXT_TAG}_{node_instance.node_id}")
+    node_instance.params["ylabel"] = dpg.get_value(f"{YLABEL_TEXT_TAG}_{node_instance.node_id}")
+    node_instance.params["marker_color"] = dpg.get_value(f"{PLOT_MARKER_COLOR_TAG}_{node_instance.node_id}")
+    node_instance.params["line_color"] = dpg.get_value(f"{PLOT_LINE_COLOR_TAG}_{node_instance.node_id}")
+    rg = dpg.get_value(f"{PLOT_REGION_TAG}_{node_instance.node_id}")
+    if rg == "Plot 1":
+        node_instance.params["region"] = PLOT_1_TAG
+    elif rg == "Plot 2":
+        node_instance.params["region"] = PLOT_2_TAG
+    elif rg == "Plot 3":
+        node_instance.params["region"] = PLOT_3_TAG
+    elif rg == "Plot 4":
+        node_instance.params["region"] = PLOT_4_TAG
+    elif rg == "Plot 5":
+        node_instance.params["region"] = PLOT_5_TAG
+    elif rg == "Plot 6":
+        node_instance.params["region"] = PLOT_6_TAG
 
 def add_node_popup(node_instance:Node):
 
     if node_instance.__class__.__name__ == "CSVImportNode":
 
-        with dpg.popup(parent=node_instance.node_id, tag=f"{POP_UP_TAG}_{node_instance.node_id}", modal=True):
+        with dpg.popup(parent=node_instance.node_id, tag=f"{POP_UP_TAG}_{node_instance.node_id}", modal=False):
             dpg.add_text("CSV Import Node")
             dpg.add_text("Select a CSV file to import.")
             with dpg.group(horizontal=True):
@@ -84,7 +110,24 @@ def add_node_popup(node_instance:Node):
                 dpg.add_button(label="Browse", callback=lambda:dpg.show_item(f"{OPENFILE_DIALOG_TAG}_{node_instance.node_id}"))
             dpg.add_radio_button(["Comma", "Tab", "Semi-colon", "colon"],label="Delimit", 
                                  horizontal=True, default_value="Comma", tag=f"{CSV_RADIO_TAG}_{node_instance.node_id}")
-            dpg.add_button(label="Save", callback=csv_import_callback, user_data=node_instance)
+            dpg.add_button(label="Save Changes", callback=csv_import_callback, user_data=node_instance)
+    elif node_instance.__class__.__name__ == "LinearRegressionNode":
+        with dpg.popup(parent=node_instance.node_id, tag=f"{POP_UP_TAG}_{node_instance.node_id}", modal=False):
+            dpg.add_text("Linear Regression Node")
+            dpg.add_text("This node will compute the slope and intercept of a given data set.")
+    elif node_instance.__class__.__name__ == "XYScatterPlotNode":
+        with dpg.popup(parent=node_instance.node_id, tag=f"{POP_UP_TAG}_{node_instance.node_id}", modal=False):
+            dpg.add_text("XY Scatter Plot Node")
+            dpg.add_input_text(label="Title", hint="Enter the plot title here.", tag=f"{PLOT_TITLE_TEXT_TAG}_{node_instance.node_id}")
+            dpg.add_input_text(label="X Label", hint="Enter the x-axis label here.", tag=f"{XLABEL_TEXT_TAG}_{node_instance.node_id}")
+            dpg.add_input_text(label="Y Label", hint="Enter the y-axis label here.", tag=f"{YLABEL_TEXT_TAG}_{node_instance.node_id}")
+            dpg.add_color_edit(label="Marker Color", default_value=(255, 255, 255, 255), 
+                               tag=f"{PLOT_MARKER_COLOR_TAG}_{node_instance.node_id}")
+            dpg.add_color_edit(label="Line Color", default_value=(255, 0, 255, 255), 
+                               tag=f"{PLOT_LINE_COLOR_TAG}_{node_instance.node_id}")
+            dpg.add_combo(label="Plot Area", items=["Plot 1", "Plot 2", "Plot 3", "Plot 4", "Plot 5", "Plot 6"], 
+                          default_value="Plot 1", tag=f"{PLOT_REGION_TAG}_{node_instance.node_id}")
+            dpg.add_button(label="Save Changes", callback=scatter_plot_callback, user_data=node_instance)
 
 
 def add_node_callback(sender, app_data, user_data):
@@ -103,19 +146,20 @@ def add_node_callback(sender, app_data, user_data):
                                    parent=new_id,
                                    attribute_type=dpg.mvNode_Attr_Input,
                                    user_data=[new_id, att.name]):
-                dpg.add_text(att.name)
+                dpg.add_text(att.name.split("##")[0])
 
         for att in node.output_ports:
             with dpg.node_attribute(label=att.name,
                                    parent=new_id,
                                    attribute_type=dpg.mvNode_Attr_Output,
                                    user_data=[new_id, att.name]):
-                dpg.add_text(att.name)
+                dpg.add_text(att.name.split("##")[0])
 
 
 def delink_callback(sender, app_data, user_data):
         # app_data -> link_id
-    graph_manager.disconnect(dpg.get_item_user_data(app_data)[0])
+    ports = dpg.get_item_user_data(app_data)
+    graph_manager.disconnect(ports[0], ports[1])
     dpg.delete_item(app_data)
 
 def link_callback(sender, app_data):
