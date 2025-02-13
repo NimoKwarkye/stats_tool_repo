@@ -1,0 +1,144 @@
+{
+  "nodes": [
+    {
+      "node_id": "CSVImport_1",
+      "node_type": "CSVImport",
+      "params": {
+        "filepath": "F:\\personal_projects\\python_projects\\stats_tool\\stats_tool_repo\\deprecated\\data\\linearRegressionTestData.csv",
+        "csv_sep": ","
+      },
+      "input_ports": [],
+      "output_ports": [
+        [
+          "data##CSVImport_1",
+          "DataFrame",
+          "out",
+          true,
+          0
+        ],
+        [
+          "labels##CSVImport_1",
+          "Series",
+          "out",
+          true,
+          1
+        ]
+      ],
+      "position": [
+        129.0,
+        87.0
+      ],
+      "node_index": 1
+    },
+    {
+      "node_id": "LinRegression_1",
+      "node_type": "LinRegression",
+      "params": {
+        "slope": 61.29999999999999,
+        "intercept": -9.700000000000752
+      },
+      "input_ports": [
+        [
+          "data##LinRegression_1",
+          "DataFrame",
+          "in",
+          false,
+          0
+        ]
+      ],
+      "output_ports": [
+        [
+          "fit##LinRegression_1",
+          "Model",
+          "out",
+          true,
+          0
+        ]
+      ],
+      "position": [
+        324.0,
+        92.0
+      ],
+      "node_index": 1
+    },
+    {
+      "node_id": "ScatterPlot_1",
+      "node_type": "ScatterPlot",
+      "params": {
+        "title": "saved_loaded",
+        "xlabel": "x-axis",
+        "ylabel": "y-axis",
+        "type": "scatter",
+        "region": "plot_1",
+        "marker_color": [
+          255.0,
+          255.0,
+          255.0,
+          255.0
+        ],
+        "line_color": [
+          255.0,
+          0.0,
+          255.0,
+          255.0
+        ]
+      },
+      "input_ports": [
+        [
+          "data##ScatterPlot_1",
+          "DataFrame",
+          "in",
+          false,
+          0
+        ],
+        [
+          "fit##ScatterPlot_1",
+          "Model",
+          "in",
+          false,
+          1
+        ]
+      ],
+      "output_ports": [],
+      "position": [
+        617.0,
+        162.0
+      ],
+      "node_index": 1
+    }
+  ],
+  "connections": [
+    [
+      "CSVImport_1",
+      "data##CSVImport_1",
+      "LinRegression_1",
+      "data##LinRegression_1"
+    ],
+    [
+      "CSVImport_1",
+      "data##CSVImport_1",
+      "ScatterPlot_1",
+      "data##ScatterPlot_1"
+    ],
+    [
+      "LinRegression_1",
+      "fit##LinRegression_1",
+      "ScatterPlot_1",
+      "fit##ScatterPlot_1"
+    ]
+  ],
+  "node_factory": {
+    "CSVImport": {
+      "count": 2,
+      "old_types": []
+    },
+    "LinRegression": {
+      "count": 2,
+      "old_types": []
+    },
+    "ScatterPlot": {
+      "count": 2,
+      "old_types": []
+    }
+  }
+}

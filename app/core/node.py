@@ -31,8 +31,19 @@ class Node(ABC):
                 return
         raise ValueError(f"Input port '{port_name}' not found in node {self.node_id}.")
 
+    def get_input_port_index(self, port_name):
+        for idx, port in enumerate(self.input_ports):
+            if port.name == port_name:
+                return port.port_index
+        raise ValueError(f"Input port '{port_name}' not found in node {self.node_id}.")
+    
+    def get_output_port_index(self, port_name):
+        for idx, port in enumerate(self.output_ports):
+            if port.name == port_name:
+                return port.port_index
+        raise ValueError(f"Output port '{port_name}' not found in node {self.node_id}.")
 
-    def get_output(self, port, port_name):
+    def get_output(self, port_name):
         for port in self.output_ports:
             if port.name == port_name:
                 return port.value

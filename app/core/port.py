@@ -8,6 +8,7 @@ class Port:
         self.direction = direction  # "in" or "out"
         self.value = []
         self.port_open = True
+        self.port_index = 0
 
     def __repr__(self):
         return f"<Port {self.direction} '{self.name}' ({self.port_type})>"

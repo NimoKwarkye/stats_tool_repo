@@ -7,9 +7,7 @@ class XYScatterPlotNode(Node):
         super().__init__(node_id, name)
         self.has_data = False
         self.params = {
-                    "x": None, 
-                    "y": None, 
-                    "trend_line":[], 
+                     
                     "title": None, 
                     "xlabel": "x", 
                     "ylabel": "y",
@@ -18,6 +16,10 @@ class XYScatterPlotNode(Node):
                     "marker_color": None,
                     "line_color": None,
                     }
+        self.plot_data= {   "x": None, 
+                            "y": None, 
+                            "trend_line":[],
+                            }
         self.add_input_port("data", "DataFrame")
         self.add_input_port("fit", "Model")
 
@@ -39,10 +41,10 @@ class XYScatterPlotNode(Node):
             return False
         #set the x and y values from port_data
         #if port_fit is not None, set the trend line
-        self.params["x"] = list(port_data[:, 0])
-        self.params["y"] = list(port_data[:, 1])
+        self.plot_data["x"] = list(port_data[:, 0])
+        self.plot_data["y"] = list(port_data[:, 1])
         if port_fit is not None:
-            self.params["trend_line"].append(port_fit[0])
-            self.params["trend_line"].append(port_fit[1])
+            self.plot_data["trend_line"].append(port_fit[0])
+            self.plot_data["trend_line"].append(port_fit[1])
         self.has_data = True
         return True

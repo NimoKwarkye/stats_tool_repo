@@ -31,7 +31,7 @@ def execude_graph():
             node:Node = graph_manager.get_node(node_id)
             if node.__class__.__name__ == "XYScatterPlotNode":
                 if node.has_data:
-                    plot_area.scatter_plot(node.params["region"], node.params)
+                    plot_area.scatter_plot(node.params["region"], node.params, node.plot_data)
         
 
 def get_relative_mouse_pos(ref_object:str):
@@ -129,32 +129,55 @@ def add_node_popup(node_instance:Node):
                           default_value="Plot 1", tag=f"{PLOT_REGION_TAG}_{node_instance.node_id}")
             dpg.add_button(label="Save Changes", callback=scatter_plot_callback, user_data=node_instance)
 
+def create_node(node : Node, app_data):
+    new_id = node.node_id
+    pos = node.position
+    open_file_dialog(node)
+    with dpg.node(label=f"{node.name} {node.node_index}", tag=new_id, 
+                  parent=NODE_EDITOR_TAG, pos=pos, user_data=[new_id, app_data]):
+        add_node_popup(node)
+        for idx, att in enumerate(node.input_ports):
+            node.input_ports[idx].port_index = idx
+            with dpg.node_attribute(label=att.name,
+                                   parent=new_id,
+                                   tag = att.name + new_id + f"input_{idx}",
+                                   attribute_type=dpg.mvNode_Attr_Input,
+                                   user_data=[new_id, att.name]):
+                dpg.add_text(att.name.split("##")[0])
+
+        for idx, att in enumerate(node.output_ports):
+            node.output_ports[idx].port_index = idx
+            with dpg.node_attribute(label=att.name,
+                                   parent=new_id,
+                                   tag = att.name + new_id + f"output_{idx}",
+                                   attribute_type=dpg.mvNode_Attr_Output,
+                                   user_data=[new_id, att.name]):
+                dpg.add_text(att.name.split("##")[0])
 
 def add_node_callback(sender, app_data, user_data):
 
     pos = get_relative_mouse_pos(REF_NODE_TAG)
     node = node_factory.create_node(app_data, pos)
-    new_id = node.node_id
     graph_manager.add_node(node)
-    open_file_dialog(node)
-    # Create a visual node using dearpygui's node editor.
-    with dpg.node(label=f"{node.name} {node.node_index}", tag=new_id, 
-                  parent=NODE_EDITOR_TAG, pos=pos, user_data=[new_id, app_data]):
-        add_node_popup(node)
-        for att in node.input_ports:
-            with dpg.node_attribute(label=att.name,
-                                   parent=new_id,
-                                   attribute_type=dpg.mvNode_Attr_Input,
-                                   user_data=[new_id, att.name]):
-                dpg.add_text(att.name.split("##")[0])
+    
+    create_node(node, app_data)
 
-        for att in node.output_ports:
-            with dpg.node_attribute(label=att.name,
-                                   parent=new_id,
-                                   attribute_type=dpg.mvNode_Attr_Output,
-                                   user_data=[new_id, att.name]):
-                dpg.add_text(att.name.split("##")[0])
 
+def create_loaded_nodes():
+    for node_id, node in graph_manager.nodes.items():
+        type_name  = node.node_id.split("_")[0]
+        create_node(node, type_name)
+    
+    for conn in graph_manager.connections:
+        reconnect_loaded_nodes(conn[0], conn[1], conn[2], conn[3])
+
+
+def reconnect_loaded_nodes(node_id_1, port_1, node_id_2, port_2):
+    node_1 = graph_manager.get_node(node_id_1)
+    node_2 = graph_manager.get_node(node_id_2)
+    attr_1 = port_1 + node_1.node_id + f"output_{node_1.get_output_port_index(port_1)}"
+    attr_2 = port_2 + node_2.node_id + f"input_{node_2.get_input_port_index(port_2)}"
+    dpg.add_node_link(attr_1, attr_2, parent=NODE_EDITOR_TAG, user_data=[port_1, port_2])
 
 def delink_callback(sender, app_data, user_data):
         # app_data -> link_id
@@ -172,12 +195,35 @@ def link_callback(sender, app_data):
         dpg.add_node_link(app_data[0], app_data[1], parent=sender, 
                           user_data=[first_node[1], second_node[1]])
 
+
+def delete_node(node:Node):
+    node_id = node.node_id
+    dpg.delete_item(f"{OPENFILE_DIALOG_TAG}_{node_id}")
+    dpg.delete_item(f"{POP_UP_TAG}_{node_id}")  
+    dpg.delete_item(node_id)
+    node_factory.delete_node(node_id.split("_")[0], node.node_index)
+    graph_manager.remove_node(node_id)
+
+
+def save_graph_callback():
+    graph_manager.save_to_file("graph.json", node_factory)
+
+def load_graph_callback():
+    node_ids = [ky for ky in graph_manager.nodes.keys()]
+    for node_id in node_ids:
+        delete_node(graph_manager.get_node(node_id))
+    graph_manager.load_from_file("graph.json", node_factory)
+    create_loaded_nodes()
+
+
+
 def delete_selected_nodes(self, sender, app_data, user_data):
     selected_nodes = dpg.get_selected_nodes(app_data)
     
     for item_id in selected_nodes:
         node_user_data = dpg.get_item_user_data(item_id)
         node_index = int(node_user_data[0].split("_")[-1])
+        print("Deleting node", node_user_data[0])
         graph_manager.remove_node(node_user_data[0])
         node_factory.delete_node(node_user_data[1], node_index)
         dpg.delete_item(f"{OPENFILE_DIALOG_TAG}_{node_user_data[0]}")
@@ -232,7 +278,10 @@ def setup_ui():
                                         drop_callback=add_node_callback,
                                         no_scrollbar=True,
                                         no_scroll_with_mouse=True):
-                    dpg.add_button(label="execute", callback=lambda: execude_graph())
+                    with dpg.group(horizontal=True):
+                        dpg.add_button(label="execute graph", callback=lambda: execude_graph())
+                        dpg.add_button(label="save graph", callback= lambda : save_graph_callback())
+                        dpg.add_button(label="load graph", callback= lambda : load_graph_callback())
                     with dpg.node_editor(tag=NODE_EDITOR_TAG, 
                                         callback=link_callback, 
                                         delink_callback=delink_callback,

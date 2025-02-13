@@ -10,18 +10,18 @@ def no_data_plot(parent:str):
     dpg.set_axis_limits(parent +"_y", 0, 1)
     dpg.add_plot_annotation(label="No Data Available", default_value=(0.5, 0.5), tag=parent +"_main", parent=parent)
 
-def scatter_plot(parent:str, node_params):
+def scatter_plot(parent:str, node_params, plot_data):
     dpg.delete_item(parent + "_main")
     dpg.delete_item(parent + "_main_fit")
     dpg.set_item_label(parent + "_x", node_params["xlabel"])
     dpg.set_item_label(parent + "_y", node_params["ylabel"])
-    dpg.set_axis_limits(parent +"_y", min(node_params["y"]), max(node_params["y"]))
-    dpg.set_axis_limits(parent +"_x", min(node_params["x"]), max(node_params["x"])) # lock axis limits so annotation is centered
-    dpg.add_scatter_series(node_params["x"], node_params["y"], label=node_params["title"], 
+    dpg.set_axis_limits(parent +"_y", min(plot_data["y"]), max(plot_data["y"]))
+    dpg.set_axis_limits(parent +"_x", min(plot_data["x"]), max(plot_data["x"])) # lock axis limits so annotation is centered
+    dpg.add_scatter_series(plot_data["x"], plot_data["y"], label=node_params["title"], 
                            tag=parent +"_main", parent=parent + "_y")
     
-    if(len(node_params["trend_line"]) > 0):
-        dpg.add_line_series(node_params["trend_line"][0], node_params["trend_line"][1], 
+    if(len(plot_data["trend_line"]) > 0):
+        dpg.add_line_series(plot_data["trend_line"][0], plot_data["trend_line"][1], 
                             label="fit", tag=parent +"_main_fit", parent=parent+ "_y")
     dpg.set_axis_limits_auto(parent +"_x")
     dpg.set_axis_limits_auto(parent +"_y")
