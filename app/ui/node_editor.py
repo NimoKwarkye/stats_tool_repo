@@ -1,3 +1,4 @@
+import os
 import dearpygui.dearpygui as dpg
 from app.core.node import Node
 from app.core.graph_manager import GraphManager
@@ -47,20 +48,47 @@ def get_relative_mouse_pos(ref_object:str):
     return [local_x, local_y]
 
 
-def open_file_dialog_callback(sender, app_data, user_data):
+def open_csvfile_dialog_callback(sender, app_data, user_data):
     input_text_tag = user_data
     selected_file = list(app_data['selections'].items())[0][1]
-    dpg.set_value(input_text_tag, selected_file)
+    if dpg.does_item_exist(input_text_tag):
+        dpg.set_value(input_text_tag, selected_file)
 
-def open_file_dialog(node_instance:Node):
-    with dpg.file_dialog(directory_selector=False, show=False, 
-                         tag=f"{OPENFILE_DIALOG_TAG}_{node_instance.node_id}", width=700 ,
-                         height=400, modal=True, user_data=f"{INPUT_TEXT_TAG}_{node_instance.node_id}",
-                         callback=open_file_dialog_callback):
+def save_jsonfile_dialog_callback(sender, app_data, user_data):
+    selected_file = app_data["file_path_name"].split(".")[0] + ".json"
+    if len(selected_file) == 0:
+        print("No file selected.")
+        return
+    graph_manager.save_to_file(selected_file, node_factory)
+    print("Graph saved successfully.")
+
+def open_jsonfile_dialog_callback(sender, app_data, user_data):
+    selected_file = None
+    if app_data["selections"].__len__() > 0:
+        selected_file = list(app_data['selections'].items())[0][1]
+    else:
+        selected_file = app_data["file_path_name"]
+    if os.path.exists(selected_file):
+        node_ids = [ky for ky in graph_manager.nodes.keys()]
+        for node_id in node_ids:
+            delete_node(graph_manager.get_node(node_id))
+        graph_manager.load_from_file(selected_file, node_factory)
+        create_loaded_nodes()
+        print("Graph loaded successfully.")
+    else:
+        print("File not found.", selected_file)
+
+def open_file_dialog(tag:str, user_data:str, callback, label="Open File"):
+    with dpg.file_dialog(
+                         label=label, directory_selector=False, show=False, 
+                         tag=f"{OPENFILE_DIALOG_TAG}_{tag}", width=520 ,
+                         height=400, modal=True, user_data=user_data,
+                         callback=callback):
         dpg.add_file_extension(".*")
         dpg.add_file_extension("", color=(150, 255, 150, 255))
         dpg.add_file_extension("Source files (*.csv){.csv}", color=(0, 255, 255, 255))
         dpg.add_file_extension(".csv", color=(255, 0, 255, 255), custom_text="[CSV]")
+        dpg.add_file_extension(".json", color=(255, 255, 55, 255), custom_text="[JSON]")
 
 
 def csv_import_callback(sender, app_data, user_data):
@@ -111,10 +139,12 @@ def add_node_popup(node_instance:Node):
             dpg.add_radio_button(["Comma", "Tab", "Semi-colon", "colon"],label="Delimit", 
                                  horizontal=True, default_value="Comma", tag=f"{CSV_RADIO_TAG}_{node_instance.node_id}")
             dpg.add_button(label="Save Changes", callback=csv_import_callback, user_data=node_instance)
+    
     elif node_instance.__class__.__name__ == "LinearRegressionNode":
         with dpg.popup(parent=node_instance.node_id, tag=f"{POP_UP_TAG}_{node_instance.node_id}", modal=False):
             dpg.add_text("Linear Regression Node")
             dpg.add_text("This node will compute the slope and intercept of a given data set.")
+    
     elif node_instance.__class__.__name__ == "XYScatterPlotNode":
         with dpg.popup(parent=node_instance.node_id, tag=f"{POP_UP_TAG}_{node_instance.node_id}", modal=False):
             dpg.add_text("XY Scatter Plot Node")
@@ -132,7 +162,10 @@ def add_node_popup(node_instance:Node):
 def create_node(node : Node, app_data):
     new_id = node.node_id
     pos = node.position
-    open_file_dialog(node)
+    if node.__class__.__name__ == "CSVImportNode":
+        open_file_dialog(node.node_id, 
+                         f"{INPUT_TEXT_TAG}_{node.node_id}", 
+                         open_csvfile_dialog_callback)
     with dpg.node(label=f"{node.name} {node.node_index}", tag=new_id, 
                   parent=NODE_EDITOR_TAG, pos=pos, user_data=[new_id, app_data]):
         add_node_popup(node)
@@ -198,22 +231,29 @@ def link_callback(sender, app_data):
 
 def delete_node(node:Node):
     node_id = node.node_id
-    dpg.delete_item(f"{OPENFILE_DIALOG_TAG}_{node_id}")
-    dpg.delete_item(f"{POP_UP_TAG}_{node_id}")  
+    if dpg.does_item_exist(f"{OPENFILE_DIALOG_TAG}_{node_id}"):
+        dpg.delete_item(f"{OPENFILE_DIALOG_TAG}_{node_id}")
+    if dpg.does_item_exist(f"{POP_UP_TAG}_{node_id}"):
+        dpg.delete_item(f"{POP_UP_TAG}_{node_id}")  
     dpg.delete_item(node_id)
     node_factory.delete_node(node_id.split("_")[0], node.node_index)
     graph_manager.remove_node(node_id)
 
 
 def save_graph_callback():
-    graph_manager.save_to_file("graph.json", node_factory)
+    if graph_manager.nodes.__len__() == 0:
+
+        print("No nodes to save.")
+        return
+    if dpg.does_item_exist(f"{OPENFILE_DIALOG_TAG}_json_save"):
+        dpg.show_item(f"{OPENFILE_DIALOG_TAG}_json_save")    
+    
+        print("Saving Graph....")
 
 def load_graph_callback():
-    node_ids = [ky for ky in graph_manager.nodes.keys()]
-    for node_id in node_ids:
-        delete_node(graph_manager.get_node(node_id))
-    graph_manager.load_from_file("graph.json", node_factory)
-    create_loaded_nodes()
+    if dpg.does_item_exist(f"{OPENFILE_DIALOG_TAG}_json_open"):
+        dpg.show_item(f"{OPENFILE_DIALOG_TAG}_json_open")
+        print("Loading Graph....")
 
 
 
@@ -224,11 +264,16 @@ def delete_selected_nodes(self, sender, app_data, user_data):
         node_user_data = dpg.get_item_user_data(item_id)
         node_index = int(node_user_data[0].split("_")[-1])
         print("Deleting node", node_user_data[0])
+        
+        if dpg.does_item_exist(f"{OPENFILE_DIALOG_TAG}_{node_user_data[0]}"):
+            dpg.delete_item(f"{OPENFILE_DIALOG_TAG}_{node_user_data[0]}")
+        
+        if dpg.does_item_exist(f"{POP_UP_TAG}_{node_user_data[0]}"):
+            dpg.delete_item(f"{POP_UP_TAG}_{node_user_data[0]}")
+        
+        dpg.delete_item(node_user_data[0])
         graph_manager.remove_node(node_user_data[0])
         node_factory.delete_node(node_user_data[1], node_index)
-        dpg.delete_item(f"{OPENFILE_DIALOG_TAG}_{node_user_data[0]}")
-        dpg.delete_item(f"{POP_UP_TAG}_{node_user_data[0]}")
-        dpg.delete_item(node_user_data[0])
 
 def setup_ui():
     with dpg.handler_registry():
@@ -240,6 +285,8 @@ def setup_ui():
         # -------------------------
         # Footer: Bottom 30%
         # -------------------------
+    open_file_dialog("json_save", [], save_jsonfile_dialog_callback, "Save Graph As")
+    open_file_dialog("json_open", [], open_jsonfile_dialog_callback, "Open Saved Graph")
     with dpg.window(tag=EDITOR_TAG, 
                     label="Editor", 
                     no_close=True, 

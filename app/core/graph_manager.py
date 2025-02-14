@@ -64,15 +64,15 @@ class GraphManager:
         for con in self.connections:
             if node_id in con:
                 self.nodes[con[2]].open_port(con[3])
-        self.connections = [con for con in self.connections if node_id not in con]
+        self.connections = [con for con in self.connections if not node_id  in con]
         self.nodes.pop(node_id)
 
     def disconnect(self, source_port_name, target_port_name):
         for con in self.connections:
             if source_port_name in con and target_port_name in con:
                 self.nodes[con[2]].open_port(target_port_name)
-        self.connections = [con for con in self.connections if source_port_name \
-                            not in con and target_port_name not in con] 
+        self.connections = [con for con in self.connections if not (source_port_name in con and target_port_name in con)]
+        
 
 
     def get_node(self, node_id):

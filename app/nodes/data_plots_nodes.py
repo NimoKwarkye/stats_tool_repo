@@ -8,13 +8,13 @@ class XYScatterPlotNode(Node):
         self.has_data = False
         self.params = {
                      
-                    "title": None, 
+                    "title": "title", 
                     "xlabel": "x", 
                     "ylabel": "y",
                     "type": "scatter",
-                    "region": None,
-                    "marker_color": None,
-                    "line_color": None,
+                    "region": "Plot 1",
+                    "marker_color": (255, 255, 55, 255),
+                    "line_color": (255, 155, 55, 255),
                     }
         self.plot_data= {   "x": None, 
                             "y": None, 
