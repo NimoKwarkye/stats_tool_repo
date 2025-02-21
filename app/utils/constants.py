@@ -12,6 +12,7 @@ FONT_TAG = dpg.generate_uuid()
 PLOT_AREA_TAG = "PlotArea"
 MAIN_WINDOW_TAG = "MainWindow"
 EDITOR_TAG = "MainEditor"
+LOG_WINDOW_TAG = "log_window"
 FUNCTIONS_PANEL_TAG   = "FunctionsPanel"
 NODE_EDITOR_PANEL_TAG = "NodeEditorPanel"
 NODE_EDITOR_TAG       = "node_editor"

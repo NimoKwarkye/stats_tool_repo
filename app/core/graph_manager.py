@@ -1,11 +1,11 @@
 from app.core.node import Node
 import json
-
+from app.utils.log_handler import LogHandler
 class GraphManager:
     def __init__(self):
         self.nodes = {}         # Map node_id to node instance.
         self.connections = []   # List of connections:
-                                # Each connection is (source_id, source_port, target_id, target_port).
+        self.logs_handler: LogHandler = LogHandler()                       # Each connection is (source_id, source_port, target_id, target_port).
 
     def add_node(self, node:Node):
         self.nodes[node.node_id] = node
@@ -20,7 +20,8 @@ class GraphManager:
         target_node :Node = self.nodes.get(target_id)
 
         if not source_node or not target_node:
-            raise ValueError("GraphManager: One of the nodes not found.")
+            self.logs_handler.add_log("GraphManager: One of the nodes not found.", -1)
+            return False
         # Locate the output port from the source and the input port from the target.
         source_port = next((p for p in source_node.output_ports if p.name == source_port_name), None)
         target_port = next((p for p in target_node.input_ports if p.name == target_port_name), None)
@@ -57,7 +58,7 @@ class GraphManager:
         # Update the target node’s input with the current value of the source’s output.
         target_node.set_input(target_port.name, source_port.value)
         target_node.close_port(target_port.name)
-        print(f"GraphManager: Connected {source_node.node_id}.{source_port.name} -> {target_node.node_id}.{target_port.name}")
+        #print(f"GraphManager: Connected {source_node.node_id}.{source_port.name} -> {target_node.node_id}.{target_port.name}")
         return True
 
     def remove_node(self, node_id):
@@ -157,7 +158,7 @@ class GraphManager:
         """
         print("GraphManager: Executing connected nodes...")
         if  len(self.connections) == 0:
-            print("GraphManager: No connections found.")
+            self.logs_handler.add_log("GraphManager: No connections found.", 1)
             return False
 
         # Compute the number of incoming connections for each node.
@@ -188,6 +189,6 @@ class GraphManager:
             try:
                 node.compute()
             except Exception as e:
-                print(f"Error executing node {node.node_id}: {e}")
+                self.logs_handler.add_log(f"Error executing node {node.node_id}\nmsg: {e}", -1)
                 return False
         return True

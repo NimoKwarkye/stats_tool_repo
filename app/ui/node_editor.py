@@ -6,7 +6,8 @@ from app.core.node_factory import NodeFactory
 from app.nodes.data_import_node import CSVImportNode
 from app.nodes.linear_regression_node import LinearRegressionNode
 from app.nodes.data_plots_nodes import XYScatterPlotNode
-from app.ui import plot_area 
+from app.ui import plot_area
+from app.utils.log_handler import LogHandler 
 from app.utils.constants import EDITOR_TAG, FUNCTIONS_PANEL_TAG, NODE_EDITOR_PANEL_TAG, \
                                 NODE_EDITOR_TAG, OPENFILE_DIALOG_TAG, INPUT_TEXT_TAG, \
                                 POP_UP_TAG, CSV_RADIO_TAG, REF_NODE_TAG, CSVIMPORT_DRAG_ID, \
@@ -14,12 +15,14 @@ from app.utils.constants import EDITOR_TAG, FUNCTIONS_PANEL_TAG, NODE_EDITOR_PAN
                                 PLOT_2_TAG, PLOT_3_TAG, PLOT_4_TAG, PLOT_5_TAG, PLOT_6_TAG, \
                                 INPUT_TEXT_TAG, PLOT_TITLE_TEXT_TAG, XLABEL_TEXT_TAG, YLABEL_TEXT_TAG, \
                                 PLOT_TYPE_RADIO_TAG, PLOT_REGION_TAG, PLOT_MARKER_COLOR_TAG, \
-                                PLOT_LINE_COLOR_TAG, PLOT_COLORMAP_TAG
+                                PLOT_LINE_COLOR_TAG, PLOT_COLORMAP_TAG, LOG_WINDOW_TAG
+
 
 
 
 graph_manager = GraphManager()
 node_factory = NodeFactory()
+logs_handler: LogHandler = LogHandler()
 
 node_factory.register_prototype(CSVIMPORT_DRAG_ID, CSVImportNode("proto_csv"))
 node_factory.register_prototype(LINEAR_REG_DRAG_ID, LinearRegressionNode("proto_lin_reg"))
@@ -27,12 +30,12 @@ node_factory.register_prototype(SCATTER_PLOT_DRAG_ID, XYScatterPlotNode("proto_s
 
 def execude_graph():
     if graph_manager.execute():
-        print("Graph executed successfully.")
         for node_id in graph_manager.nodes.keys():
             node:Node = graph_manager.get_node(node_id)
             if node.__class__.__name__ == "XYScatterPlotNode":
                 if node.has_data:
                     plot_area.scatter_plot(node.params["region"], node.params, node.plot_data)
+        logs_handler.add_log("Graph executed successfully.")
         
 
 def get_relative_mouse_pos(ref_object:str):
@@ -57,10 +60,9 @@ def open_csvfile_dialog_callback(sender, app_data, user_data):
 def save_jsonfile_dialog_callback(sender, app_data, user_data):
     selected_file = app_data["file_path_name"].split(".")[0] + ".json"
     if len(selected_file) == 0:
-        print("No file selected.")
         return
     graph_manager.save_to_file(selected_file, node_factory)
-    print("Graph saved successfully.")
+    logs_handler.add_log("Graph saved successfully.")
 
 def open_jsonfile_dialog_callback(sender, app_data, user_data):
     selected_file = None
@@ -74,9 +76,9 @@ def open_jsonfile_dialog_callback(sender, app_data, user_data):
             delete_node(graph_manager.get_node(node_id))
         graph_manager.load_from_file(selected_file, node_factory)
         create_loaded_nodes()
-        print("Graph loaded successfully.")
+        logs_handler.add_log("Graph loaded successfully.")
     else:
-        print("File not found.", selected_file)
+        logs_handler.add_log(f"File: {selected_file} not found.", -1)
 
 def open_file_dialog(tag:str, user_data:str, callback, label="Open File"):
     with dpg.file_dialog(
@@ -243,17 +245,16 @@ def delete_node(node:Node):
 def save_graph_callback():
     if graph_manager.nodes.__len__() == 0:
 
-        print("No nodes to save.")
+        logs_handler.add_log("Graph is empty", 1)
         return
     if dpg.does_item_exist(f"{OPENFILE_DIALOG_TAG}_json_save"):
         dpg.show_item(f"{OPENFILE_DIALOG_TAG}_json_save")    
-    
-        print("Saving Graph....")
+        logs_handler.add_log("Saving Graph....")
 
 def load_graph_callback():
     if dpg.does_item_exist(f"{OPENFILE_DIALOG_TAG}_json_open"):
         dpg.show_item(f"{OPENFILE_DIALOG_TAG}_json_open")
-        print("Loading Graph....")
+        logs_handler.add_log("Loading Graph")
 
 
 
@@ -263,7 +264,6 @@ def delete_selected_nodes(self, sender, app_data, user_data):
     for item_id in selected_nodes:
         node_user_data = dpg.get_item_user_data(item_id)
         node_index = int(node_user_data[0].split("_")[-1])
-        print("Deleting node", node_user_data[0])
         
         if dpg.does_item_exist(f"{OPENFILE_DIALOG_TAG}_{node_user_data[0]}"):
             dpg.delete_item(f"{OPENFILE_DIALOG_TAG}_{node_user_data[0]}")
@@ -287,6 +287,11 @@ def setup_ui():
         # -------------------------
     open_file_dialog("json_save", [], save_jsonfile_dialog_callback, "Save Graph As")
     open_file_dialog("json_open", [], open_jsonfile_dialog_callback, "Open Saved Graph")
+    with dpg.window(tag=LOG_WINDOW_TAG, 
+                    label="Logs", 
+                    no_close=True, 
+                    no_collapse=True):
+        pass
     with dpg.window(tag=EDITOR_TAG, 
                     label="Editor", 
                     no_close=True, 
