@@ -103,8 +103,49 @@ def csv_import_callback(sender, app_data, user_data):
         node_instance.params["csv_sep"] = "\t"
     elif radio_tag == "Semi-colon":
         node_instance.params["csv_sep"] = ";"
-    elif radio_tag == "colon":
+    elif radio_tag == "Colon":
         node_instance.params["csv_sep"] = ":"
+
+def csv_import_ui_update(node_instance:Node):
+    dpg.set_value(f"{INPUT_TEXT_TAG}_{node_instance.node_id}",
+                  node_instance.params["filepath"])
+    radio_value = node_instance.params["csv_sep"]
+
+    if radio_value == ",":
+        dpg.set_value(f"{CSV_RADIO_TAG}_{node_instance.node_id}", "Comma")
+    elif radio_value == "\t":
+        dpg.set_value(f"{CSV_RADIO_TAG}_{node_instance.node_id}", "Tab")
+    elif radio_value == ";":
+        dpg.set_value(f"{CSV_RADIO_TAG}_{node_instance.node_id}", "Semi-colon")
+    elif radio_value == ":":
+        dpg.set_value(f"{CSV_RADIO_TAG}_{node_instance.node_id}", "Colon")
+    
+def xy_scatter_plot_ui_update(node_instance:Node):
+    dpg.set_value(f"{PLOT_TITLE_TEXT_TAG}_{node_instance.node_id}", node_instance.params["title"])
+    dpg.set_value(f"{XLABEL_TEXT_TAG}_{node_instance.node_id}", node_instance.params["xlabel"])
+    dpg.set_value(f"{YLABEL_TEXT_TAG}_{node_instance.node_id}", node_instance.params["ylabel"])
+    dpg.set_value(f"{PLOT_MARKER_COLOR_TAG}_{node_instance.node_id}", node_instance.params["marker_color"])
+    dpg.set_value(f"{PLOT_LINE_COLOR_TAG}_{node_instance.node_id}", node_instance.params["line_color"])
+    region = node_instance.params["region"]
+    if region == PLOT_1_TAG:
+        dpg.set_value(f"{PLOT_REGION_TAG}_{node_instance.node_id}", "Plot 1")
+    elif region == PLOT_2_TAG:
+        dpg.set_value(f"{PLOT_REGION_TAG}_{node_instance.node_id}", "Plot 2")
+    elif region == PLOT_3_TAG:
+        dpg.set_value(f"{PLOT_REGION_TAG}_{node_instance.node_id}", "Plot 3")
+    elif region == PLOT_4_TAG:
+        dpg.set_value(f"{PLOT_REGION_TAG}_{node_instance.node_id}", "Plot 4")
+    elif region == PLOT_5_TAG:
+        dpg.set_value(f"{PLOT_REGION_TAG}_{node_instance.node_id}", "Plot 5")
+    elif region == PLOT_6_TAG:
+        dpg.set_value(f"{PLOT_REGION_TAG}_{node_instance.node_id}", "Plot 6")
+
+def update_node_ui_params(node_instance: Node):
+    if node_instance.__class__.__name__ == "CSVImportNode":
+        csv_import_ui_update(node_instance)
+    elif node_instance.__class__.__name__ == "XYScatterPlotNode":
+        xy_scatter_plot_ui_update(node_instance)
+
 
 def scatter_plot_callback(sender, app_data, user_data):
     node_instance:Node = user_data
@@ -138,7 +179,7 @@ def add_node_popup(node_instance:Node):
                 dpg.add_input_text(label="File Path", hint="Enter the file path here.",
                                    tag=f"{INPUT_TEXT_TAG}_{node_instance.node_id}")
                 dpg.add_button(label="Browse", callback=lambda:dpg.show_item(f"{OPENFILE_DIALOG_TAG}_{node_instance.node_id}"))
-            dpg.add_radio_button(["Comma", "Tab", "Semi-colon", "colon"],label="Delimit", 
+            dpg.add_radio_button(["Comma", "Tab", "Semi-colon", "Colon"],label="Delimit", 
                                  horizontal=True, default_value="Comma", tag=f"{CSV_RADIO_TAG}_{node_instance.node_id}")
             dpg.add_button(label="Save Changes", callback=csv_import_callback, user_data=node_instance)
     
@@ -202,6 +243,7 @@ def create_loaded_nodes():
     for node_id, node in graph_manager.nodes.items():
         type_name  = node.node_id.split("_")[0]
         create_node(node, type_name)
+        update_node_ui_params(node)
     
     for conn in graph_manager.connections:
         reconnect_loaded_nodes(conn[0], conn[1], conn[2], conn[3])

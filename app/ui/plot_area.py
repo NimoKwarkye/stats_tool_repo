@@ -3,7 +3,8 @@ from app.utils.constants import PLOT_AREA_TAG, PLOT_1_TAG, PLOT_2_TAG, PLOT_3_TA
 
 def no_data_plot(parent:str):
     dpg.delete_item(parent + "_main")
-    dpg.delete_item(parent + "_main_fit")
+    if dpg.does_item_exist(parent + "_main_fit"):
+        dpg.delete_item(parent + "_main_fit")
     dpg.set_item_label(parent + "_x", "x")
     dpg.set_item_label(parent + "_y", "y")
     dpg.set_axis_limits(parent +"_x", 0, 1) # lock axis limits so annotation is centered
@@ -12,11 +13,14 @@ def no_data_plot(parent:str):
 
 def scatter_plot(parent:str, node_params, plot_data):
     dpg.delete_item(parent + "_main")
-    dpg.delete_item(parent + "_main_fit")
+    if dpg.does_item_exist(parent + "_main_fit"):
+        dpg.delete_item(parent + "_main_fit")
+
     dpg.set_item_label(parent + "_x", node_params["xlabel"])
     dpg.set_item_label(parent + "_y", node_params["ylabel"])
     dpg.set_axis_limits(parent +"_y", min(plot_data["y"]), max(plot_data["y"]))
     dpg.set_axis_limits(parent +"_x", min(plot_data["x"]), max(plot_data["x"])) # lock axis limits so annotation is centered
+    
     dpg.add_scatter_series(plot_data["x"], plot_data["y"], label=node_params["title"], 
                            tag=parent +"_main", parent=parent + "_y")
     
