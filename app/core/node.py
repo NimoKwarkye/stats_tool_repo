@@ -14,13 +14,19 @@ class Node(ABC):
         self.node_index = 0
 
     
-    def add_input_port(self, name, port_type):
+    def add_input_port(self, name, port_type, port_alias=""):
+        if len(port_alias) == 0:
+            port_alias = name
         port = Port(name, port_type, 'in')
+        port.alias = port_alias
         self.input_ports.append(port)
 
 
-    def add_output_port(self, name, port_type):
+    def add_output_port(self, name, port_type, port_alias=""):
+        if len(port_alias) == 0:
+            port_alias = name
         port = Port(name, port_type, 'out')
+        port.alias = port_alias
         self.output_ports.append(port)
     
     

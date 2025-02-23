@@ -1,6 +1,7 @@
-from app.core.node import Node
+from app.core.node import Node, Port
 import json
 from app.utils.log_handler import LogHandler
+import uuid
 class GraphManager:
     def __init__(self):
         self.nodes = {}         # Map node_id to node instance.
@@ -93,8 +94,6 @@ class GraphManager:
                 'node_id': node_id,
                 'node_type': node_id.split("_")[0],  # e.g. "CSVImportNode"
                 'params': node.params,
-                "input_ports":[[port.name, port.port_type, port.direction, port.port_open, port.port_index] for port in node.input_ports],
-                "output_ports":[[port.name, port.port_type, port.direction, port.port_open, port.port_index] for port in node.output_ports],
                 "position":node.position,
                 "node_index":node.node_index
             }
@@ -102,6 +101,18 @@ class GraphManager:
         with open(filename, 'w') as f:
             json.dump(data, f, indent=2)
         print(f"GraphManager: Graph saved to {filename}")
+
+    def construct_ports(self, node_id, default_ports):
+        
+        assigned_ports = []
+        for idx, default in enumerate(default_ports):
+            default.port_index = idx
+            default.name = f"{default.name}##{node_id}"
+            assigned_ports.append(default)
+        
+        return assigned_ports
+    
+
 
     def load_from_file(self, filename, node_factory):
         """
@@ -118,28 +129,16 @@ class GraphManager:
         
         # Reconstruct nodes
         for node_data in data.get('nodes', []):
-            node_type = node_data['node_type']
-            node_id = node_data['node_id']
-            position = node_data['position']
+            node_type = node_data.get('node_type')
+            node_id = node_data.get('node_id')
+            position = node_data.get('position')
+            node_index = node_data.get("node_index", 0)
             # Create a new node instance using the factory.
-            node : Node = node_factory.create_from_file(node_id,position, node_type, node_data["node_index"])
-            node.params.update(node_data['params'])
-            for idx, port_data in enumerate(node_data["input_ports"]):
-                node.input_ports[idx].name = port_data[0]
-                node.input_ports[idx].port_type = port_data[1]
-                node.input_ports[idx].direction = port_data[2]
-                node.input_ports[idx].port_open = port_data[3]
-                node.input_ports[idx].port_index = port_data[4]
-            
-            for idx, port_data in enumerate(node_data["output_ports"]):
-                node.output_ports[idx].name = port_data[0]
-                node.output_ports[idx].port_type = port_data[1]
-                node.output_ports[idx].direction = port_data[2]
-                node.output_ports[idx].port_open = port_data[3]
-                node.output_ports[idx].port_index = port_data[4]
-
-            node_data["input_ports"] = node_data["input_ports"]
-            node_data["output_ports"] = node_data["output_ports"]
+            node: Node = node_factory.create_from_file(node_id, position, node_type, node_index)
+            # Merge parameters; port entries missing from the file will use the defaults.
+            node.params.update(node_data.get('params', {}))
+            node.input_ports = self.construct_ports(node.node_id, node.input_ports)
+            node.output_ports = self.construct_ports(node.node_id, node.output_ports)
             self.nodes[node_id] = node
             print(f"GraphManager: Loaded node {node_id} ({node_type})")
         
@@ -148,6 +147,7 @@ class GraphManager:
             source_node = self.nodes[source_id]
             target_node = self.nodes[target_id]
             target_node.set_input(target_port, source_node.get_output(source_port))
+            target_node.close_port(target_port)
             print(f"GraphManager: Re-connected {source_id}.{source_port} -> {target_id}.{target_port}")
         print(f"GraphManager: Graph loaded from {filename}")
 

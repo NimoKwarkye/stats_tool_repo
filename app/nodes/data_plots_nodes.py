@@ -22,8 +22,8 @@ class XYScatterPlotNode(Node):
                             "y": None, 
                             "trend_line":[],
                             }
-        self.add_input_port("data", "DataFrame")
-        self.add_input_port("fit", "Model")
+        self.add_input_port("data", "DataFrame", "XY Data")
+        self.add_input_port("fit", "Model", "Fit Line")
 
 
     
@@ -72,7 +72,7 @@ class HeatMapPlotNode(Node):
                             "cols": None, 
                             "scale_min":None,
                             }
-        self.add_input_port("data", "DataFrame")
+        self.add_input_port("data", "DataFrame", "Data")
     
 
     def compute(self):

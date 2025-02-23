@@ -6,8 +6,8 @@ class LinearRegressionNode(Node):
         super().__init__(node_id, name)
         self.params = {"slope": 0,
                        "intercept": 0}  # filepath to CSV
-        self.add_input_port("data", "DataFrame")
-        self.add_output_port("fit", "Model")
+        self.add_input_port("data", "DataFrame", "XY Data")
+        self.add_output_port("fit", "Model", "Fit Line")
 
     def fit(self, data):
         prd = self.params["slope"] * data[:, 0] + self.params["intercept"]

@@ -294,8 +294,6 @@ def heatmap_plot_ui_update(node_instance:Node):
     elif region == PLOT_6_TAG:
         dpg.set_value(f"{PLOT_REGION_TAG}_{node_instance.node_id}", "Plot 6")
 
-
-
 def heatmap_plot_callback(sender, app_data, user_data):
     node_instance:Node = user_data
     node_instance.params["title"] = dpg.get_value(f"{PLOT_TITLE_TEXT_TAG}_{node_instance.node_id}")
@@ -446,7 +444,7 @@ def create_node(node : Node, app_data):
                                    tag = att.name + new_id + f"input_{idx}",
                                    attribute_type=dpg.mvNode_Attr_Input,
                                    user_data=[new_id, att.name]):
-                dpg.add_text(att.name.split("##")[0])
+                dpg.add_text(att.alias)
 
         for idx, att in enumerate(node.output_ports):
             node.output_ports[idx].port_index = idx
@@ -455,7 +453,7 @@ def create_node(node : Node, app_data):
                                    tag = att.name + new_id + f"output_{idx}",
                                    attribute_type=dpg.mvNode_Attr_Output,
                                    user_data=[new_id, att.name]):
-                dpg.add_text(att.name.split("##")[0])
+                dpg.add_text(att.alias)
 
 def add_node_callback(sender, app_data, user_data):
 

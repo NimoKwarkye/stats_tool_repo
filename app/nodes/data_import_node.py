@@ -11,8 +11,8 @@ class CSVImportNode(Node):
         super().__init__(node_id, name)
         self.params = {"filepath": None,
                        "csv_sep": ","}  # filepath to CSV
-        self.add_output_port("data", "DataFrame")
-        self.add_output_port("labels", "Series")
+        self.add_output_port("data", "DataFrame", "Data")
+        self.add_output_port("labels", "Series", "Feature Labels")
 
     def compute(self):
         print(f"[{self.node_id}] Computing...")
@@ -40,8 +40,8 @@ class SQLDBImportNode(Node):
         self.params = {"connection_string": None,
                        "data_query": None,
                        "labels_query": None}
-        self.add_output_port("data", "DataFrame")
-        self.add_output_port("labels", "Series")
+        self.add_output_port("data", "DataFrame", "Data")
+        self.add_output_port("labels", "Series", "Feature Labels")
 
     def compute(self):
         print(f"[{self.node_id}] Computing...")
