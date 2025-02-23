@@ -114,7 +114,7 @@ class GraphManager:
         # Clear current state
         self.nodes.clear()
         self.connections = data.get('connections', [])
-        node_factory.prototypes_count = data.get("node_factory", {})
+        node_factory.prototypes_count.update(data.get("node_factory", {}))
         
         # Reconstruct nodes
         for node_data in data.get('nodes', []):
@@ -123,7 +123,7 @@ class GraphManager:
             position = node_data['position']
             # Create a new node instance using the factory.
             node : Node = node_factory.create_from_file(node_id,position, node_type, node_data["node_index"])
-            node.params = node_data['params']
+            node.params.update(node_data['params'])
             for idx, port_data in enumerate(node_data["input_ports"]):
                 node.input_ports[idx].name = port_data[0]
                 node.input_ports[idx].port_type = port_data[1]

@@ -5,7 +5,7 @@ from app.core.graph_manager import GraphManager
 from app.core.node_factory import NodeFactory
 from app.nodes.data_import_node import CSVImportNode, SQLDBImportNode
 from app.nodes.linear_regression_node import LinearRegressionNode
-from app.nodes.data_plots_nodes import XYScatterPlotNode
+from app.nodes.data_plots_nodes import XYScatterPlotNode, HeatMapPlotNode
 from app.ui.plot_area import PlotArea
 from app.utils.log_handler import LogHandler 
 from app.utils.constants import EDITOR_TAG, FUNCTIONS_PANEL_TAG, NODE_EDITOR_PANEL_TAG, \
@@ -16,7 +16,7 @@ from app.utils.constants import EDITOR_TAG, FUNCTIONS_PANEL_TAG, NODE_EDITOR_PAN
                                 INPUT_TEXT_TAG, PLOT_TITLE_TEXT_TAG, XLABEL_TEXT_TAG, YLABEL_TEXT_TAG, \
                                 PLOT_TYPE_RADIO_TAG, PLOT_REGION_TAG, PLOT_MARKER_COLOR_TAG, \
                                 PLOT_LINE_COLOR_TAG, PLOT_COLORMAP_TAG, LOG_WINDOW_TAG, \
-                                SQLDB_IMPORT_DRAG_ID
+                                SQLDB_IMPORT_DRAG_ID, HEATMAP_PLOT_DRAG_ID
 
 
 
@@ -30,6 +30,7 @@ node_factory.register_prototype(CSVIMPORT_DRAG_ID, CSVImportNode("proto_csv"))
 node_factory.register_prototype(LINEAR_REG_DRAG_ID, LinearRegressionNode("proto_lin_reg"))
 node_factory.register_prototype(SCATTER_PLOT_DRAG_ID, XYScatterPlotNode("proto_scatter_plot"))
 node_factory.register_prototype(SQLDB_IMPORT_DRAG_ID, SQLDBImportNode("proto_sqldb_import"))
+node_factory.register_prototype(HEATMAP_PLOT_DRAG_ID, HeatMapPlotNode("proto_heatmap_plot"))
 
 def execude_graph():
     if graph_manager.execute():
@@ -38,6 +39,9 @@ def execude_graph():
             if node.__class__.__name__ == "XYScatterPlotNode":
                 if node.has_data:
                     plot_area.scatter_plot(node.params["region"], node.params, node.plot_data)
+            elif node.__class__.__name__ == "HeatMapPlotNode":
+                if node.has_data:
+                    plot_area.heatmap_plot(node.params["region"], node.params, node.plot_data)
         logs_handler.add_log("Graph executed successfully.")
         
 
@@ -147,6 +151,28 @@ def xy_scatter_plot_ui_update(node_instance:Node):
     dpg.set_value(f"{YLABEL_TEXT_TAG}_{node_instance.node_id}", node_instance.params["ylabel"])
     dpg.set_value(f"{PLOT_MARKER_COLOR_TAG}_{node_instance.node_id}", node_instance.params["marker_color"])
     dpg.set_value(f"{PLOT_LINE_COLOR_TAG}_{node_instance.node_id}", node_instance.params["line_color"])
+    dpg.set_value(f"{PLOT_TITLE_TEXT_TAG}_{node_instance.node_id}_legend", node_instance.params["plot_label"])
+    dpg.set_value(f"{PLOT_TITLE_TEXT_TAG}_{node_instance.node_id}_fit_legend", node_instance.params["fit_label"])   
+
+    marker_style = node_instance.params["marker_style"]
+    if marker_style == dpg.mvPlotMarker_Circle:
+        dpg.set_value(f"{PLOT_MARKER_COLOR_TAG}_{node_instance.node_id}_style", "Circle")
+    elif marker_style == dpg.mvPlotMarker_Square:
+        dpg.set_value(f"{PLOT_MARKER_COLOR_TAG}_{node_instance.node_id}_style", "Square")
+    elif marker_style == dpg.mvPlotMarker_Diamond:
+        dpg.set_value(f"{PLOT_MARKER_COLOR_TAG}_{node_instance.node_id}_style", "Diamond")
+    elif marker_style == dpg.mvPlotMarker_Cross:
+        dpg.set_value(f"{PLOT_MARKER_COLOR_TAG}_{node_instance.node_id}_style", "Cross")
+    elif marker_style == dpg.mvPlotMarker_Plus:
+        dpg.set_value(f"{PLOT_MARKER_COLOR_TAG}_{node_instance.node_id}_style", "Plus")
+    elif marker_style == dpg.mvPlotMarker_Asterisk:
+        dpg.set_value(f"{PLOT_MARKER_COLOR_TAG}_{node_instance.node_id}_style", "Asterisk")
+    elif marker_style == dpg.mvPlotMarker_Up:
+        dpg.set_value(f"{PLOT_MARKER_COLOR_TAG}_{node_instance.node_id}_style", "Triangle")
+    else:
+        dpg.set_value(f"{PLOT_MARKER_COLOR_TAG}_{node_instance.node_id}_style", "Circle")
+        node_instance.params["marker_style"] = dpg.mvPlotMarker_Circle
+
     region = node_instance.params["region"]
     if region == PLOT_1_TAG:
         dpg.set_value(f"{PLOT_REGION_TAG}_{node_instance.node_id}", "Plot 1")
@@ -168,7 +194,8 @@ def update_node_ui_params(node_instance: Node):
         xy_scatter_plot_ui_update(node_instance)
     elif node_instance.__class__.__name__ == "SQLDBImportNode":
         sql_import_ui_update(node_instance)
-
+    elif node_instance.__class__.__name__ == "HeatMapPlotNode":
+        heatmap_plot_ui_update(node_instance)
 
 def scatter_plot_callback(sender, app_data, user_data):
     node_instance:Node = user_data
@@ -177,6 +204,25 @@ def scatter_plot_callback(sender, app_data, user_data):
     node_instance.params["ylabel"] = dpg.get_value(f"{YLABEL_TEXT_TAG}_{node_instance.node_id}")
     node_instance.params["marker_color"] = dpg.get_value(f"{PLOT_MARKER_COLOR_TAG}_{node_instance.node_id}")
     node_instance.params["line_color"] = dpg.get_value(f"{PLOT_LINE_COLOR_TAG}_{node_instance.node_id}")
+    node_instance.params["plot_label"] = dpg.get_value(f"{PLOT_TITLE_TEXT_TAG}_{node_instance.node_id}_legend")
+    node_instance.params["fit_label"] = dpg.get_value(f"{PLOT_TITLE_TEXT_TAG}_{node_instance.node_id}_fit_legend")  
+    
+    marker_style = dpg.get_value(f"{PLOT_MARKER_COLOR_TAG}_{node_instance.node_id}_style")
+    if marker_style == "Circle":
+        node_instance.params["marker_style"] = dpg.mvPlotMarker_Circle
+    elif marker_style == "Square":
+        node_instance.params["marker_style"] = dpg.mvPlotMarker_Square
+    elif marker_style == "Diamond":
+        node_instance.params["marker_style"] = dpg.mvPlotMarker_Diamond
+    elif marker_style == "Cross":
+        node_instance.params["marker_style"] = dpg.mvPlotMarker_Cross
+    elif marker_style == "Plus":
+        node_instance.params["marker_style"] = dpg.mvPlotMarker_Plus
+    elif marker_style == "Asterisk":
+        node_instance.params["marker_style"] = dpg.mvPlotMarker_Asterisk
+    elif marker_style == "Triangle":
+        node_instance.params["marker_style"] = dpg.mvPlotMarker_Up
+    
     rg = dpg.get_value(f"{PLOT_REGION_TAG}_{node_instance.node_id}")
     if rg == "Plot 1":
         node_instance.params["region"] = PLOT_1_TAG
@@ -190,6 +236,123 @@ def scatter_plot_callback(sender, app_data, user_data):
         node_instance.params["region"] = PLOT_5_TAG
     elif rg == "Plot 6":
         node_instance.params["region"] = PLOT_6_TAG
+    dpg.hide_item(f"{POP_UP_TAG}_{node_instance.node_id}")
+
+
+def heatmap_plot_ui_update(node_instance:Node):
+    dpg.set_value(f"{PLOT_TITLE_TEXT_TAG}_{node_instance.node_id}", node_instance.params["title"])
+    dpg.set_value(f"{XLABEL_TEXT_TAG}_{node_instance.node_id}", node_instance.params["xlabel"])
+    dpg.set_value(f"{YLABEL_TEXT_TAG}_{node_instance.node_id}", node_instance.params["ylabel"])
+    dpg.set_value(f"{PLOT_TITLE_TEXT_TAG}_{node_instance.node_id}_bounds", 
+                  [node_instance.params["bounds_min"][0], node_instance.params["bounds_min"][1],
+                   node_instance.params["bounds_max"][0], node_instance.params["bounds_max"][1]])
+    colormap = node_instance.params["colormap"] 
+    if colormap == dpg.mvPlotColormap_Viridis:
+        dpg.set_value(f"{PLOT_COLORMAP_TAG}_{node_instance.node_id}", "Viridis")
+    elif colormap == dpg.mvPlotColormap_Plasma:
+        dpg.set_value(f"{PLOT_COLORMAP_TAG}_{node_instance.node_id}", "Plasma")
+    elif colormap == dpg.mvPlotColormap_BrBG:
+        dpg.set_value(f"{PLOT_COLORMAP_TAG}_{node_instance.node_id}", "BrBG")
+    elif colormap == dpg.mvPlotColormap_Cool:
+        dpg.set_value(f"{PLOT_COLORMAP_TAG}_{node_instance.node_id}", "Cool")
+    elif colormap == dpg.mvPlotColormap_Dark:
+        dpg.set_value(f"{PLOT_COLORMAP_TAG}_{node_instance.node_id}", "Dark")
+    elif colormap == dpg.mvPlotColormap_Greys:
+        dpg.set_value(f"{PLOT_COLORMAP_TAG}_{node_instance.node_id}", "Greys")
+    elif colormap == dpg.mvPlotColormap_Deep:
+        dpg.set_value(f"{PLOT_COLORMAP_TAG}_{node_instance.node_id}", "Deep")
+    elif colormap == dpg.mvPlotColormap_Default:
+        dpg.set_value(f"{PLOT_COLORMAP_TAG}_{node_instance.node_id}", "Default")
+    elif colormap == dpg.mvPlotColormap_Hot:
+        dpg.set_value(f"{PLOT_COLORMAP_TAG}_{node_instance.node_id}", "Hot")
+    elif colormap == dpg.mvPlotColormap_Jet:
+        dpg.set_value(f"{PLOT_COLORMAP_TAG}_{node_instance.node_id}", "Jet")
+    elif colormap == dpg.mvPlotColormap_Paired:
+        dpg.set_value(f"{PLOT_COLORMAP_TAG}_{node_instance.node_id}", "Paired")
+    elif colormap == dpg.mvPlotColormap_Pastel:
+        dpg.set_value(f"{PLOT_COLORMAP_TAG}_{node_instance.node_id}", "Pastel")
+    elif colormap == dpg.mvPlotColormap_Pink:
+        dpg.set_value(f"{PLOT_COLORMAP_TAG}_{node_instance.node_id}", "Pink")
+    elif colormap == dpg.mvPlotColormap_Spectral:
+        dpg.set_value(f"{PLOT_COLORMAP_TAG}_{node_instance.node_id}", "Spectral")
+    elif colormap == dpg.mvPlotColormap_Twilight:
+        dpg.set_value(f"{PLOT_COLORMAP_TAG}_{node_instance.node_id}", "Twilight")
+    elif colormap == dpg.mvPlotColormap_RdBu:
+        dpg.set_value(f"{PLOT_COLORMAP_TAG}_{node_instance.node_id}", "RdBu")
+    
+    region = node_instance.params["region"]
+    if region == PLOT_1_TAG:
+        dpg.set_value(f"{PLOT_REGION_TAG}_{node_instance.node_id}", "Plot 1")
+    elif region == PLOT_2_TAG:
+        dpg.set_value(f"{PLOT_REGION_TAG}_{node_instance.node_id}", "Plot 2")
+    elif region == PLOT_3_TAG:
+        dpg.set_value(f"{PLOT_REGION_TAG}_{node_instance.node_id}", "Plot 3")
+    elif region == PLOT_4_TAG:
+        dpg.set_value(f"{PLOT_REGION_TAG}_{node_instance.node_id}", "Plot 4")
+    elif region == PLOT_5_TAG:
+        dpg.set_value(f"{PLOT_REGION_TAG}_{node_instance.node_id}", "Plot 5")
+    elif region == PLOT_6_TAG:
+        dpg.set_value(f"{PLOT_REGION_TAG}_{node_instance.node_id}", "Plot 6")
+
+
+
+def heatmap_plot_callback(sender, app_data, user_data):
+    node_instance:Node = user_data
+    node_instance.params["title"] = dpg.get_value(f"{PLOT_TITLE_TEXT_TAG}_{node_instance.node_id}")
+    node_instance.params["xlabel"] = dpg.get_value(f"{XLABEL_TEXT_TAG}_{node_instance.node_id}")
+    node_instance.params["ylabel"] = dpg.get_value(f"{YLABEL_TEXT_TAG}_{node_instance.node_id}")
+    bounds = dpg.get_value(f"{PLOT_TITLE_TEXT_TAG}_{node_instance.node_id}_bounds")
+    node_instance.params["bounds_min"] = [bounds[0], bounds[1]]
+    node_instance.params["bounds_max"] = [bounds[2], bounds[3]]
+
+    rg = dpg.get_value(f"{PLOT_REGION_TAG}_{node_instance.node_id}")
+    if rg == "Plot 1":
+        node_instance.params["region"] = PLOT_1_TAG
+    elif rg == "Plot 2":
+        node_instance.params["region"] = PLOT_2_TAG
+    elif rg == "Plot 3":
+        node_instance.params["region"] = PLOT_3_TAG
+    elif rg == "Plot 4":
+        node_instance.params["region"] = PLOT_4_TAG
+    elif rg == "Plot 5":
+        node_instance.params["region"] = PLOT_5_TAG
+    elif rg == "Plot 6":
+        node_instance.params["region"] = PLOT_6_TAG
+
+    colormap = dpg.get_value(f"{PLOT_COLORMAP_TAG}_{node_instance.node_id}")
+    if colormap == "Viridis":
+        node_instance.params["colormap"] = dpg.mvPlotColormap_Viridis
+    elif colormap == "Plasma":
+        node_instance.params["colormap"] = dpg.mvPlotColormap_Plasma
+    elif colormap == "BrBG":
+        node_instance.params["colormap"] = dpg.mvPlotColormap_BrBG
+    elif colormap == "Cool":
+        node_instance.params["colormap"] = dpg.mvPlotColormap_Cool
+    elif colormap == "Dark":
+        node_instance.params["colormap"] = dpg.mvPlotColormap_Dark
+    elif colormap == "Greys":
+        node_instance.params["colormap"] = dpg.mvPlotColormap_Greys
+    elif colormap == "Deep":
+        node_instance.params["colormap"] = dpg.mvPlotColormap_Deep
+    elif colormap == "Default":
+        node_instance.params["colormap"] = dpg.mvPlotColormap_Default
+    elif colormap == "Hot":
+        node_instance.params["colormap"] = dpg.mvPlotColormap_Hot
+    elif colormap == "Jet":
+        node_instance.params["colormap"] = dpg.mvPlotColormap_Jet
+    elif colormap == "Paired":
+        node_instance.params["colormap"] = dpg.mvPlotColormap_Paired
+    elif colormap == "Pastel":
+        node_instance.params["colormap"] = dpg.mvPlotColormap_Pastel
+    elif colormap == "Pink":
+        node_instance.params["colormap"] = dpg.mvPlotColormap_Pink
+    elif colormap == "Spectral":
+        node_instance.params["colormap"] = dpg.mvPlotColormap_Spectral
+    elif colormap == "Twilight":
+        node_instance.params["colormap"] = dpg.mvPlotColormap_Twilight
+    elif colormap == "RdBu":
+        node_instance.params["colormap"] = dpg.mvPlotColormap_RdBu
+
     dpg.hide_item(f"{POP_UP_TAG}_{node_instance.node_id}")
 
 def add_node_popup(node_instance:Node):
@@ -226,15 +389,45 @@ def add_node_popup(node_instance:Node):
         with dpg.popup(parent=node_instance.node_id, tag=f"{POP_UP_TAG}_{node_instance.node_id}", modal=False):
             dpg.add_text("XY Scatter Plot Node")
             dpg.add_input_text(label="Title", hint="Enter the plot title here.", tag=f"{PLOT_TITLE_TEXT_TAG}_{node_instance.node_id}")
+            dpg.add_input_text(label="Plot Legend", hint="Enter the plot label here.", tag=f"{PLOT_TITLE_TEXT_TAG}_{node_instance.node_id}_legend")
+            dpg.add_input_text(label="Fit Legend", hint="Enter the fit label here.", tag=f"{PLOT_TITLE_TEXT_TAG}_{node_instance.node_id}_fit_legend")
             dpg.add_input_text(label="X Label", hint="Enter the x-axis label here.", tag=f"{XLABEL_TEXT_TAG}_{node_instance.node_id}")
             dpg.add_input_text(label="Y Label", hint="Enter the y-axis label here.", tag=f"{YLABEL_TEXT_TAG}_{node_instance.node_id}")
             dpg.add_color_edit(label="Marker Color", default_value=(255, 255, 255, 255), 
                                tag=f"{PLOT_MARKER_COLOR_TAG}_{node_instance.node_id}")
+            dpg.add_combo(label="Marker Style", items=["Circle", "Square", "Diamond", "Cross", "Plus", "Asterisk", "Triangle"],
+                          default_value="Circle", tag=f"{PLOT_MARKER_COLOR_TAG}_{node_instance.node_id}_style")
+            
             dpg.add_color_edit(label="Line Color", default_value=(255, 0, 255, 255), 
                                tag=f"{PLOT_LINE_COLOR_TAG}_{node_instance.node_id}")
             dpg.add_combo(label="Plot Area", items=["Plot 1", "Plot 2", "Plot 3", "Plot 4", "Plot 5", "Plot 6"], 
                           default_value="Plot 1", tag=f"{PLOT_REGION_TAG}_{node_instance.node_id}")
             dpg.add_button(label="Save Changes", callback=scatter_plot_callback, user_data=node_instance)
+    
+    elif node_instance.__class__.__name__ == "HeatMapPlotNode":
+        with dpg.popup(parent=node_instance.node_id, tag=f"{POP_UP_TAG}_{node_instance.node_id}", modal=False):
+            dpg.add_text("HeatMap Plot Node")
+            dpg.add_input_text(label="Title", hint="Enter the plot title here.", 
+                               tag=f"{PLOT_TITLE_TEXT_TAG}_{node_instance.node_id}")
+            dpg.add_input_text(label="X Label", hint="Enter the x-axis label here.", 
+                               tag=f"{XLABEL_TEXT_TAG}_{node_instance.node_id}")
+            dpg.add_input_text(label="Y Label", hint="Enter the y-axis label here.", 
+                               tag=f"{YLABEL_TEXT_TAG}_{node_instance.node_id}")
+            dpg.add_input_floatx(label="XY bounds", default_value=[0, 0, 1, 1], 
+                                 tag=f"{PLOT_TITLE_TEXT_TAG}_{node_instance.node_id}_bounds")
+
+            colormaps = sorted([
+                        "Viridis", "Plasma", "BrBG", "Cool", "Dark", "Greys", "Deep", "Default",
+                        "Hot", "Jet", "Paired", "Pastel", "Pink", "Spectral", "Twilight", "RdBu"
+                    ], key=str.lower)
+            dpg.add_combo(items=colormaps, 
+                          label="Colormap", default_value="Viridis",
+                          tag=f"{PLOT_COLORMAP_TAG}_{node_instance.node_id}")
+            dpg.add_combo(label="Plot Area", items=["Plot 1", "Plot 2", "Plot 3", "Plot 4", "Plot 5", "Plot 6"], 
+                          default_value="Plot 1", tag=f"{PLOT_REGION_TAG}_{node_instance.node_id}")
+            
+            dpg.add_button(label="Save Changes", callback=heatmap_plot_callback, user_data=node_instance)
+
 
 def create_node(node : Node, app_data):
     new_id = node.node_id
@@ -385,6 +578,7 @@ def setup_ui():
                         btn_sql_db_loader = dpg.add_button(label="SQL DB Import")
                         btn_linear_regression = dpg.add_button(label="Simple LR")
                         btn_xy_scatter = dpg.add_button(label="XY Scatter Plot")
+                        btn_heatmap = dpg.add_button(label="HeatMap Plot")
 
                         with dpg.drag_payload(parent=btn_data_loader):
                             dpg.add_text("New Data Loader")
@@ -401,6 +595,9 @@ def setup_ui():
                         with dpg.drag_payload(parent=btn_xy_scatter,
                                               drag_data=SCATTER_PLOT_DRAG_ID):
                             dpg.add_text("Add a XY Scatter Plot Node")
+                        with dpg.drag_payload(parent=btn_heatmap,
+                                              drag_data=HEATMAP_PLOT_DRAG_ID):
+                            dpg.add_text("Add a HeatMap Plot Node")
                         '''with dpg.drag_payload(
                                                 parent=btn_b, 
                                                 drag_data={"name":"Function B", "value":dpg.mvNode_Attr_Output}):
