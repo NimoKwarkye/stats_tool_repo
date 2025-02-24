@@ -20,6 +20,7 @@ NODE_EDITOR_TAG       = "node_editor"
 # Node IDs
 CSVIMPORT_DRAG_ID = "CSVImport"
 LINEAR_REG_DRAG_ID = "LinRegression"
+SMP_LINEAR_REG_DRAG_ID = "SmpLinRegression"
 SCATTER_PLOT_DRAG_ID = "ScatterPlot"
 SQLDB_IMPORT_DRAG_ID = "SQLDBImport"
 HEATMAP_PLOT_DRAG_ID = "HeatMapPlot"

@@ -4,7 +4,7 @@ from app.core.node import Node
 from app.core.graph_manager import GraphManager
 from app.core.node_factory import NodeFactory
 from app.nodes.data_import_node import CSVImportNode, SQLDBImportNode
-from app.nodes.linear_regression_node import LinearRegressionNode
+from app.nodes.linear_regression_node import SimpleLinearRegressionNode
 from app.nodes.data_plots_nodes import XYScatterPlotNode, HeatMapPlotNode
 from app.ui.plot_area import PlotArea
 from app.utils.log_handler import LogHandler 
@@ -16,7 +16,7 @@ from app.utils.constants import EDITOR_TAG, FUNCTIONS_PANEL_TAG, NODE_EDITOR_PAN
                                 INPUT_TEXT_TAG, PLOT_TITLE_TEXT_TAG, XLABEL_TEXT_TAG, YLABEL_TEXT_TAG, \
                                 PLOT_TYPE_RADIO_TAG, PLOT_REGION_TAG, PLOT_MARKER_COLOR_TAG, \
                                 PLOT_LINE_COLOR_TAG, PLOT_COLORMAP_TAG, LOG_WINDOW_TAG, \
-                                SQLDB_IMPORT_DRAG_ID, HEATMAP_PLOT_DRAG_ID
+                                SQLDB_IMPORT_DRAG_ID, HEATMAP_PLOT_DRAG_ID, SMP_LINEAR_REG_DRAG_ID
 
 
 
@@ -27,7 +27,7 @@ logs_handler: LogHandler = LogHandler()
 plot_area : PlotArea = PlotArea()
 
 node_factory.register_prototype(CSVIMPORT_DRAG_ID, CSVImportNode("proto_csv"))
-node_factory.register_prototype(LINEAR_REG_DRAG_ID, LinearRegressionNode("proto_lin_reg"))
+node_factory.register_prototype(SMP_LINEAR_REG_DRAG_ID, SimpleLinearRegressionNode("proto_smp_lin_reg"))
 node_factory.register_prototype(SCATTER_PLOT_DRAG_ID, XYScatterPlotNode("proto_scatter_plot"))
 node_factory.register_prototype(SQLDB_IMPORT_DRAG_ID, SQLDBImportNode("proto_sqldb_import"))
 node_factory.register_prototype(HEATMAP_PLOT_DRAG_ID, HeatMapPlotNode("proto_heatmap_plot"))
@@ -103,6 +103,13 @@ def open_file_dialog(tag:str, user_data:str, callback, label="Open File"):
 def csv_import_callback(sender, app_data, user_data):
     node_instance:Node = user_data
     node_instance.params["filepath"] = dpg.get_value(f"{INPUT_TEXT_TAG}_{node_instance.node_id}")
+    node_instance.params["target_col"] = dpg.get_value(f"{INPUT_TEXT_TAG}_{node_instance.node_id}_target").strip()
+    node_instance.params["xaxis_col"] = dpg.get_value(f"{INPUT_TEXT_TAG}_{node_instance.node_id}_xaxis").strip()
+    node_instance.params["header"] = dpg.get_value(f"{CSV_RADIO_TAG}_{node_instance.node_id}_header")
+    node_instance.params["drop_xaxis"] = dpg.get_value(f"{CSV_RADIO_TAG}_{node_instance.node_id}_drop")
+    drop_cols = dpg.get_value(f"{INPUT_TEXT_TAG}_{node_instance.node_id}_drop_cols").split(",")
+    node_instance.params["drop_cols"] = [col.strip() for col in drop_cols]
+    
     radio_tag = dpg.get_value(f"{CSV_RADIO_TAG}_{node_instance.node_id}")
     if radio_tag == "Comma":
         node_instance.params["csv_sep"] = ","
@@ -117,6 +124,18 @@ def csv_import_callback(sender, app_data, user_data):
 def csv_import_ui_update(node_instance:Node):
     dpg.set_value(f"{INPUT_TEXT_TAG}_{node_instance.node_id}",
                   node_instance.params["filepath"])
+    dpg.set_value(f"{INPUT_TEXT_TAG}_{node_instance.node_id}_target",
+                  node_instance.params["target_col"])
+
+    dpg.set_value(f"{INPUT_TEXT_TAG}_{node_instance.node_id}_xaxis",
+                  node_instance.params["xaxis_col"])
+    dpg.set_value(f"{INPUT_TEXT_TAG}_{node_instance.node_id}_drop_cols",
+                  ", ".join(node_instance.params["drop_cols"]))
+    dpg.set_value(f"{CSV_RADIO_TAG}_{node_instance.node_id}_header",
+                  node_instance.params["header"])
+    dpg.set_value(f"{CSV_RADIO_TAG}_{node_instance.node_id}_drop",
+                  node_instance.params["drop_xaxis"])
+    
     radio_value = node_instance.params["csv_sep"]
 
     if radio_value == ",":
@@ -133,7 +152,8 @@ def sql_import_callback(sender, app_data, user_data):
     node_instance:Node = user_data
     node_instance.params["connection_string"] = dpg.get_value(f"{INPUT_TEXT_TAG}_{node_instance.node_id}_conn")
     node_instance.params["data_query"] = dpg.get_value(f"{INPUT_TEXT_TAG}_{node_instance.node_id}_data")
-    node_instance.params["labels_query"] = dpg.get_value(f"{INPUT_TEXT_TAG}_{node_instance.node_id}_labels")
+    node_instance.params["target_query"] = dpg.get_value(f"{INPUT_TEXT_TAG}_{node_instance.node_id}_target")
+    node_instance.params["xaxis_query"] = dpg.get_value(f"{INPUT_TEXT_TAG}_{node_instance.node_id}_xaxis")
     dpg.hide_item(f"{POP_UP_TAG}_{node_instance.node_id}")
 
 def sql_import_ui_update(node_instance:Node):
@@ -141,8 +161,10 @@ def sql_import_ui_update(node_instance:Node):
                   node_instance.params["connection_string"])
     dpg.set_value(f"{INPUT_TEXT_TAG}_{node_instance.node_id}_data",
                   node_instance.params["data_query"])
-    dpg.set_value(f"{INPUT_TEXT_TAG}_{node_instance.node_id}_labels",
-                    node_instance.params["labels_query"])
+    dpg.set_value(f"{INPUT_TEXT_TAG}_{node_instance.node_id}_target",
+                    node_instance.params["target_query"])
+    dpg.set_value(f"{INPUT_TEXT_TAG}_{node_instance.node_id}_xaxis",
+                    node_instance.params["xaxis_query"])
     
 
 def xy_scatter_plot_ui_update(node_instance:Node):
@@ -364,8 +386,17 @@ def add_node_popup(node_instance:Node):
                 dpg.add_input_text(label="File Path", hint="Enter the file path here.",
                                    tag=f"{INPUT_TEXT_TAG}_{node_instance.node_id}")
                 dpg.add_button(label="Browse", callback=lambda:dpg.show_item(f"{OPENFILE_DIALOG_TAG}_{node_instance.node_id}"))
+            dpg.add_checkbox(label="Header", default_value=True, tag=f"{CSV_RADIO_TAG}_{node_instance.node_id}_header")
             dpg.add_radio_button(["Comma", "Tab", "Semi-colon", "Colon"],label="Delimit", 
                                  horizontal=True, default_value="Comma", tag=f"{CSV_RADIO_TAG}_{node_instance.node_id}")
+            dpg.add_input_text(label="Target Column", hint="Enter the fit target column here.",
+                                tag=f"{INPUT_TEXT_TAG}_{node_instance.node_id}_target")
+            with dpg.group(horizontal=True):
+                dpg.add_input_text(label="X-axis Column", hint="Enter the column with x-axis data.",
+                                    tag=f"{INPUT_TEXT_TAG}_{node_instance.node_id}_xaxis")
+                dpg.add_checkbox(label="Drop X-axis", default_value=False, tag=f"{CSV_RADIO_TAG}_{node_instance.node_id}_drop")
+            dpg.add_input_text(label="Drop Columns", hint="Enter the columns to drop sperated by comma.", 
+                               tag=f"{INPUT_TEXT_TAG}_{node_instance.node_id}_drop_cols")
             dpg.add_button(label="Save Changes", callback=csv_import_callback, user_data=node_instance)
     
     elif node_instance.__class__.__name__ == "SQLDBImportNode":
@@ -374,8 +405,10 @@ def add_node_popup(node_instance:Node):
                                    tag=f"{INPUT_TEXT_TAG}_{node_instance.node_id}_conn")
             dpg.add_input_text(label="Data Query", hint="Enter importing data query here.",
                                    tag=f"{INPUT_TEXT_TAG}_{node_instance.node_id}_data")
-            dpg.add_input_text(label="Labels Query", hint="Enter importing labels query here.",
-                                   tag=f"{INPUT_TEXT_TAG}_{node_instance.node_id}_labels")
+            dpg.add_input_text(label="Target Query", hint="Enter importing target query here.",
+                                   tag=f"{INPUT_TEXT_TAG}_{node_instance.node_id}_target")
+            dpg.add_input_text(label="X-axis Query", hint="Enter importing x-axis data query here.",
+                                   tag=f"{INPUT_TEXT_TAG}_{node_instance.node_id}_xaxis")
             dpg.add_button(label="Save Changes", callback=sql_import_callback, user_data=node_instance)
 
     elif node_instance.__class__.__name__ == "LinearRegressionNode":
@@ -588,7 +621,7 @@ def setup_ui():
                             dpg.add_text("New SQL DB Import")
                         
                         with dpg.drag_payload(parent=btn_linear_regression,
-                                              drag_data=LINEAR_REG_DRAG_ID):
+                                              drag_data=SMP_LINEAR_REG_DRAG_ID):
                             dpg.add_text("Add a Simple Linear Regression Node")
                         with dpg.drag_payload(parent=btn_xy_scatter,
                                               drag_data=SCATTER_PLOT_DRAG_ID):
