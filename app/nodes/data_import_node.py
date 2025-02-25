@@ -30,7 +30,7 @@ class CSVImportNode(Node):
         try:
             headers = "infer" if self.params.get("header") else None
             df = pd.read_csv(filepath, sep=self.params.get("csv_sep"), header=headers)
-            if self.params.get("drop_cols"):
+            if len(self.params.get("drop_cols")) > 0:
                 df = df.drop(self.params.get("drop_cols"), axis=1)
             target = None
             if self.params.get("target_col"):

@@ -18,12 +18,12 @@ NODE_EDITOR_PANEL_TAG = "NodeEditorPanel"
 NODE_EDITOR_TAG       = "node_editor"
 
 # Node IDs
-CSVIMPORT_DRAG_ID = "CSVImport"
-LINEAR_REG_DRAG_ID = "LinRegression"
-SMP_LINEAR_REG_DRAG_ID = "SmpLinRegression"
-SCATTER_PLOT_DRAG_ID = "ScatterPlot"
-SQLDB_IMPORT_DRAG_ID = "SQLDBImport"
-HEATMAP_PLOT_DRAG_ID = "HeatMapPlot"
+CSVIMPORT_DRAG_ID = "CSVImportNode"
+LINEAR_REG_DRAG_ID = "LinearRegressionNode"
+SMP_LINEAR_REG_DRAG_ID = "SimpleLinearRegressionNode"
+SCATTER_PLOT_DRAG_ID = "XYScatterPlotNode"
+SQLDB_IMPORT_DRAG_ID = "SQLDBImportNode"
+HEATMAP_PLOT_DRAG_ID = "HeatMapPlotNode"
 
 # Other tags
 POP_UP_TAG = "pop_up"
