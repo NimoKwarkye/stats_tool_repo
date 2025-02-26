@@ -35,7 +35,10 @@ class BaseNodeUI:
                     dpg.add_text(att.alias)
 
     def node_popup(self):
-        raise NotImplementedError    
+        raise NotImplementedError 
+
+    def set_current_pos(self):
+        self.node_instance.position = dpg.get_item_pos(self.node_id)   
     
     def update_ui(self):
         raise NotImplementedError

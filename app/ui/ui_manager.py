@@ -25,3 +25,7 @@ class NodeUIManager:
         if self.node_ui_registry.get(node_id):
             self.node_ui_registry[node_id].delete_ui()
             del self.node_ui_registry[node_id]
+    
+    def set_current_pos(self, node_id: str):
+        if self.node_ui_registry.get(node_id):
+            self.node_ui_registry[node_id].set_current_pos()

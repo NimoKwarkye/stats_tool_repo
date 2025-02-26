@@ -110,6 +110,8 @@ def save_jsonfile_dialog_callback(sender, app_data, user_data):
     selected_file = app_data["file_path_name"].split(".")[0] + ".json"
     if len(selected_file) == 0:
         return
+    for node_id in graph_manager.nodes.keys():
+        ui_manager.set_current_pos(node_id)
     graph_manager.save_to_file(selected_file, node_factory)
     logs_handler.add_log("Graph saved successfully.")
 
