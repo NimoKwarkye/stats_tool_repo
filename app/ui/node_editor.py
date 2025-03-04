@@ -8,6 +8,8 @@ from app.nodes.linear_regression_node import SimpleLinearRegressionNode, LinearR
 from app.nodes.data_plots_nodes import XYScatterPlotNode, HeatMapPlotNode
 from app.ui.plot_area import PlotArea
 from app.ui.data_import_nodeui import CSVImportNodeUI, SQLDBImportNodeUI
+from app.nodes.decomposition_nodes import PCANode
+from app.ui.decomposition_nodeui import PCANodeUI
 from app.ui.regression_nodeui import SimpleLinearRegressionNodeUI, LinearRegressionNodeUI
 from app.ui.plots_nodeui import HeatMapPlotNodeUI, XYScatterPlotNodeUI
 from app.ui.ui_manager import NodeUIManager
@@ -15,7 +17,8 @@ from app.utils.log_handler import LogHandler
 from app.utils.constants import EDITOR_TAG, FUNCTIONS_PANEL_TAG, NODE_EDITOR_PANEL_TAG, \
                                 NODE_EDITOR_TAG, OPENFILE_DIALOG_TAG, REF_NODE_TAG, CSVIMPORT_DRAG_ID, \
                                 LINEAR_REG_DRAG_ID, SCATTER_PLOT_DRAG_ID,  LOG_WINDOW_TAG, \
-                                SQLDB_IMPORT_DRAG_ID, HEATMAP_PLOT_DRAG_ID, SMP_LINEAR_REG_DRAG_ID
+                                SQLDB_IMPORT_DRAG_ID, HEATMAP_PLOT_DRAG_ID, SMP_LINEAR_REG_DRAG_ID, \
+                                PCA_DRAG_ID
 
 NODE_UI_MAPPING = {
     CSVIMPORT_DRAG_ID: CSVImportNodeUI,
@@ -23,7 +26,8 @@ NODE_UI_MAPPING = {
     SQLDB_IMPORT_DRAG_ID: SQLDBImportNodeUI,
     LINEAR_REG_DRAG_ID: LinearRegressionNodeUI,
     HEATMAP_PLOT_DRAG_ID: HeatMapPlotNodeUI,
-    SCATTER_PLOT_DRAG_ID: XYScatterPlotNodeUI
+    SCATTER_PLOT_DRAG_ID: XYScatterPlotNodeUI,
+    PCA_DRAG_ID: PCANodeUI
     }
 
 NODE_DRAG_TEXT = {
@@ -32,7 +36,8 @@ NODE_DRAG_TEXT = {
     SQLDB_IMPORT_DRAG_ID: "Add a New SQL DB Import Node",
     HEATMAP_PLOT_DRAG_ID: "Add a HeatMap Plot Node",
     SCATTER_PLOT_DRAG_ID: "Add a XY Scatter Plot Node",
-    LINEAR_REG_DRAG_ID: "Add a Linear Regression Node"
+    LINEAR_REG_DRAG_ID: "Add a Linear Regression Node",
+    PCA_DRAG_ID: "Add a PCA Node"
 }
 
 NODE_DRAG_BTN_NAMES = {
@@ -41,7 +46,8 @@ NODE_DRAG_BTN_NAMES = {
     HEATMAP_PLOT_DRAG_ID: "HeatMap Plot",
     SCATTER_PLOT_DRAG_ID: "XY Scatter Plot",
     SMP_LINEAR_REG_DRAG_ID: "Simple LR",
-    LINEAR_REG_DRAG_ID: "Linear Regression"
+    LINEAR_REG_DRAG_ID: "Linear Regression",
+    PCA_DRAG_ID: "PCA"
 }
 
 NODE_IDS={
@@ -50,7 +56,8 @@ NODE_IDS={
     SQLDB_IMPORT_DRAG_ID: f"proto_sql_{dpg.generate_uuid()}",
     HEATMAP_PLOT_DRAG_ID: f"proto_heatmap_{dpg.generate_uuid()}",
     SCATTER_PLOT_DRAG_ID: f"proto_scatter_plot_{dpg.generate_uuid()}",
-    LINEAR_REG_DRAG_ID: f"proto_linrg_{dpg.generate_uuid()}"
+    LINEAR_REG_DRAG_ID: f"proto_linrg_{dpg.generate_uuid()}",
+    PCA_DRAG_ID: f"proto_pca_{dpg.generate_uuid()}"
 
 }
 
@@ -60,7 +67,8 @@ NODE_CLASS={
     SQLDB_IMPORT_DRAG_ID: SQLDBImportNode,
     HEATMAP_PLOT_DRAG_ID: HeatMapPlotNode,
     SCATTER_PLOT_DRAG_ID: XYScatterPlotNode,
-    LINEAR_REG_DRAG_ID: LinearRegressionNode
+    LINEAR_REG_DRAG_ID: LinearRegressionNode,
+    PCA_DRAG_ID: PCANode
 }
 
 ui_manager = NodeUIManager(NODE_UI_MAPPING)
@@ -245,7 +253,7 @@ def setup_ui():
                 with dpg.child_window(tag=FUNCTIONS_PANEL_TAG, border=False):
                     with dpg.group():
                         for key, value in NODE_DRAG_BTN_NAMES.items():
-                            dpg.add_button(label=value)
+                            dpg.add_button(label=value, width=-1)
                             with dpg.drag_payload(parent=dpg.last_item(), drag_data=key):
                                 dpg.add_text(NODE_DRAG_TEXT[key])
 

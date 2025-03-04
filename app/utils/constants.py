@@ -24,6 +24,8 @@ SMP_LINEAR_REG_DRAG_ID = "SimpleLinearRegressionNode"
 SCATTER_PLOT_DRAG_ID = "XYScatterPlotNode"
 SQLDB_IMPORT_DRAG_ID = "SQLDBImportNode"
 HEATMAP_PLOT_DRAG_ID = "HeatMapPlotNode"
+PCA_DRAG_ID = "PCANode"
+KMEANS_DRAG_ID = "KMeansNode"
 
 # Other tags
 POP_UP_TAG = "pop_up"
