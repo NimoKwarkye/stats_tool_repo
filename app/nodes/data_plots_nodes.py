@@ -15,6 +15,7 @@ class XYScatterPlotNode(Node):
             "region": "plot_1",
             "marker_color": (255, 255, 55, 255),
             "line_color": (255, 155, 55, 255),
+            "plot_type":"scatter"
         }
         self.plot_data = {
             "x": None, 
@@ -71,6 +72,7 @@ class HeatMapPlotNode(Node):
             "colormap": 0,
             "bounds_min": [0, 0],
             "bounds_max": [1, 1],
+            "plot_type": "heatmap",
         }
         self.plot_data = {
             "data": None, 
@@ -93,6 +95,54 @@ class HeatMapPlotNode(Node):
         port_data = self.get_port_value("featuredata")
         if port_data is None:
             raise ValueError("HeatMapPlot: No data provided")
+        
+        # Expecting port_data to be a NumPy array or convertible
+        port_data = np.array(port_data)
+        self.plot_data["rows"] = port_data.shape[0]
+        self.plot_data["cols"] = port_data.shape[1]
+        self.plot_data["scale_max"] = port_data.max()
+        self.plot_data["scale_min"] = port_data.min()
+        # Flatten data for storage or plotting library compatibility.
+        self.plot_data["data"] = port_data.flatten().tolist()
+        self.has_data = True
+        return True
+
+
+class PairGridPlotNode:
+    def __init__(self, node_id, name="PairGrid Plot"):
+        super().__init__(node_id, name)
+        self.has_data = False
+        self.params = {
+            "title": "title", 
+            "xlabel": "x", 
+            "ylabel": "y",
+            "region": "plot_1",
+            "colormap": 0,
+            "bounds_min": [0, 0],
+            "bounds_max": [1, 1],
+            "plot_type": "pairgrid",
+        }
+        self.plot_data = {
+            "data": None, 
+            "scale_max": None,
+            "rows": None,
+            "cols": None, 
+            "scale_min": None,
+        }
+        self.add_input_port("featuredata", "DataFrame", "Feature Data")
+    
+    def get_port_value(self, key):
+        """Helper that returns the first value of the input port with the given key."""
+        for port in self.input_ports:
+            if port.name.split("##")[0] == key and port.value:
+                return port.value[0]
+        return None
+
+    def compute(self):
+        print(f"[{self.node_id}] Computing PairGrid Plot...")
+        port_data = self.get_port_value("featuredata")
+        if port_data is None:
+            raise ValueError("PairGridPlot: No data provided")
         
         # Expecting port_data to be a NumPy array or convertible
         port_data = np.array(port_data)

@@ -75,6 +75,7 @@ ui_manager = NodeUIManager(NODE_UI_MAPPING)
 graph_manager = GraphManager()
 node_factory = NodeFactory()
 logs_handler: LogHandler = LogHandler()
+
 plot_area : PlotArea = PlotArea()
 
 for key in NODE_CLASS:
@@ -86,10 +87,10 @@ def execute_graph():
             node:Node = graph_manager.get_node(node_id)
             if node.__class__.__name__ == SCATTER_PLOT_DRAG_ID:
                 if node.has_data:
-                    plot_area.scatter_plot(node.params["region"], node.params, node.plot_data)
+                    plot_area.plot_manager.plot(node.params, node.plot_data)
             elif node.__class__.__name__ == HEATMAP_PLOT_DRAG_ID:
                 if node.has_data:
-                    plot_area.heatmap_plot(node.params["region"], node.params, node.plot_data)
+                    plot_area.plot_manager.plot(node.params, node.plot_data)
             elif node.__class__.__name__ == LINEAR_REG_DRAG_ID:
                 ui_manager.update_node_ui(node_id)
         logs_handler.add_log("Graph executed successfully.")
