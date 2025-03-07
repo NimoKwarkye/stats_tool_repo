@@ -27,5 +27,5 @@ class Port:
 
     
     def __repr__(self):
-        return f"<Port {self.direction} '{self.name}' ({self.port_type})>"
+        return f"<Port {self.direction} '{self.name}' ({self.port_id})>"
 

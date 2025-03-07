@@ -169,19 +169,21 @@ def create_loaded_nodes():
         ui_manager.update_node_ui(node_id)
     
     for conn in graph_manager.connections:
-        reconnect_loaded_nodes(conn[1], conn[3])
+        reconnect_loaded_nodes(conn[0], conn[2], conn[1], conn[3])
 
 
-def reconnect_loaded_nodes(port_1, port_2):
+def reconnect_loaded_nodes(node_1, node_2, port_1, port_2):
     attr_1 = port_1 
-    attr_2 = port_2 
-    dpg.add_node_link(attr_1, attr_2, parent=NODE_EDITOR_TAG, user_data=[port_1, port_2])
+    attr_2 = port_2
+    tag = f"{node_1}_{node_2}_{attr_1}_{attr_2}" 
+    dpg.add_node_link(attr_1, attr_2, parent=NODE_EDITOR_TAG, user_data=[port_1, port_2], tag=tag)
 
 def delink_callback(sender, app_data, user_data):
         # app_data -> link_id
     ports = dpg.get_item_user_data(app_data)
     graph_manager.disconnect(ports[0], ports[1])
-    dpg.delete_item(app_data)
+    if dpg.does_item_exist(app_data):
+        dpg.delete_item(app_data)
 
 def link_callback(sender, app_data):
     # app_data -> (link_id1, link_id2)
@@ -190,8 +192,9 @@ def link_callback(sender, app_data):
     is_connected = graph_manager.connect(first_node[0], first_node[1], 
                           second_node[0], second_node[1])
     if is_connected:
-        dpg.add_node_link(app_data[0], app_data[1], parent=sender, 
-                          user_data=[first_node[1], second_node[1]])
+        tag = f"{first_node[0]}_{second_node[0]}_{first_node[1]}_{second_node[1]}"
+        dpg.add_node_link( app_data[0], app_data[1], parent=sender, 
+                          user_data=[first_node[1], second_node[1]], tag=tag)
 
 
 def delete_node(node_id:str, node_index:int):

@@ -24,7 +24,7 @@ class CSVImportNodeUI(BaseNodeUI):
                 dpg.add_input_text(label="File Path", hint="Enter the file path here.",
                                    tag=f"{self.INPUT_TAG}_{self.node_id}_filepath")                
                 dpg.add_button(label="Browse", 
-                               callback=lambda:dpg.show_item(f"{OPENFILE_DIALOG_TAG}_{self.node_id}"))
+                               )
                 
             dpg.add_checkbox(label="Headers", default_value=True, 
                              tag=f"{self.ACTION_TAG}_{self.node_id}_header")
