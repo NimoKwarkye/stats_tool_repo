@@ -1,9 +1,10 @@
 import numpy as np
 from app.core.node import Node
+from app.core.port import PortType
 
 class XYScatterPlotNode(Node):
-    def __init__(self, node_id, name="XY Scatter Plot"):
-        super().__init__(node_id, name)
+    def __init__(self, node_index, name="XY Scatter Plot"):
+        super().__init__(node_index, name)
         self.has_data = False
         self.params = {
             "title": "title", 
@@ -22,27 +23,24 @@ class XYScatterPlotNode(Node):
             "y": None, 
             "trend_line": [],
         }
-        self.add_input_port("xaxisdata", "Series", "X Data")
-        self.add_input_port("targetdata", "Series", "Y Data")
-        self.add_input_port("fitdata", "Model", "Fit Line")
+        self.xaxisdata_port_id = self.add_input_port("xaxisdata", PortType.DATASERIESFLOAT, "X Data")
+        self.targetdata_port_id = self.add_input_port("targetdata", PortType.DATASERIESFLOAT, "Y Data")
+        self.fitdata_port_id = self.add_input_port("fitdata", PortType.MODELSERIESFLOAT, "Fit Line")
     
-    def get_port_value(self, key):
+    def get_port_value(self):
         """Helper that returns the first value of the input port with the given key."""
+        ret_data = {}
         for port in self.input_ports:
-            if port.name.split("##")[0] == key and port.value:
-                return port.value[0]
-        return None
+            if port.connection in port.value:
+                ret_data[port.port_id] = port.value[port.connection]
+        x_data = ret_data.get(self.xaxisdata_port_id)
+        y_data = ret_data.get(self.targetdata_port_id)
+        fit_data = ret_data.get(self.fitdata_port_id)
+        return x_data, y_data, fit_data
 
     def compute(self):
         print(f"[{self.node_id}] Computing XY Scatter Plot...")
-        x_data = self.get_port_value("xaxisdata")
-        y_data = self.get_port_value("targetdata")
-        # Get fit data (if present) - expecting a list with two elements: x and trend line.
-        port_fit = None
-        for port in self.input_ports:
-            if port.name.split("##")[0] == "fitdata" and port.value:
-                port_fit = port.value
-                break
+        x_data, y_data, port_fit = self.get_port_value()
         
         if x_data is None or y_data is None:
             raise ValueError(f"[{self.node_id}] Missing required X or Y data.")
@@ -61,8 +59,8 @@ class XYScatterPlotNode(Node):
 
 
 class HeatMapPlotNode(Node):
-    def __init__(self, node_id, name="HeatMap Plot"):
-        super().__init__(node_id, name)
+    def __init__(self, node_index, name="HeatMap Plot"):
+        super().__init__(node_index, name)
         self.has_data = False
         self.params = {
             "title": "title", 
@@ -81,18 +79,19 @@ class HeatMapPlotNode(Node):
             "cols": None, 
             "scale_min": None,
         }
-        self.add_input_port("featuredata", "DataFrame", "Feature Data")
+        self.feature_port_id = self.add_input_port("featuredata", PortType.DATAFRAMEFLOAT, "Feature Data")
     
-    def get_port_value(self, key):
+    def get_port_value(self):
         """Helper that returns the first value of the input port with the given key."""
         for port in self.input_ports:
-            if port.name.split("##")[0] == key and port.value:
-                return port.value[0]
+
+            if port.connection in port.value:
+                return port.value[port.connection]
         return None
 
     def compute(self):
         print(f"[{self.node_id}] Computing HeatMap Plot...")
-        port_data = self.get_port_value("featuredata")
+        port_data = self.get_port_value()
         if port_data is None:
             raise ValueError("HeatMapPlot: No data provided")
         
@@ -109,8 +108,8 @@ class HeatMapPlotNode(Node):
 
 
 class PairGridPlotNode:
-    def __init__(self, node_id, name="PairGrid Plot"):
-        super().__init__(node_id, name)
+    def __init__(self, node_index, name="PairGrid Plot"):
+        super().__init__(node_index, name)
         self.has_data = False
         self.params = {
             "title": "title", 
@@ -129,28 +128,32 @@ class PairGridPlotNode:
             "cols": None, 
             "scale_min": None,
         }
-        self.add_input_port("featuredata", "DataFrame", "Feature Data")
+        self.feature_port_id = self.add_input_port("featuredata", PortType.DATAFRAMEFLOAT, "Feature Data")
+        self.labels_port_id = self.add_input_port("featurelabels", PortType.DATASERIESSTRING, "Feature Labels")
     
-    def get_port_value(self, key):
+    def get_port_value(self):
         """Helper that returns the first value of the input port with the given key."""
+        ret_data = {}
         for port in self.input_ports:
-            if port.name.split("##")[0] == key and port.value:
-                return port.value[0]
-        return None
+            if port.connection in port.value:
+                ret_data[port.port_id] = port.value[port.connection]
+        feature_data = ret_data.get(self.feature_port_id)
+        feature_labels = ret_data.get(self.labels_port_id)
+        return feature_data, feature_labels
 
     def compute(self):
         print(f"[{self.node_id}] Computing PairGrid Plot...")
-        port_data = self.get_port_value("featuredata")
-        if port_data is None:
+        feature_data, feature_labels = self.get_port_value()
+        if feature_data is None:
             raise ValueError("PairGridPlot: No data provided")
         
-        # Expecting port_data to be a NumPy array or convertible
-        port_data = np.array(port_data)
-        self.plot_data["rows"] = port_data.shape[0]
-        self.plot_data["cols"] = port_data.shape[1]
-        self.plot_data["scale_max"] = port_data.max()
-        self.plot_data["scale_min"] = port_data.min()
+        # Expecting feature_data to be a NumPy array or convertible
+        feature_data = np.array(feature_data)
+        self.plot_data["rows"] = feature_data.shape[0]
+        self.plot_data["cols"] = feature_data.shape[1]
+        self.plot_data["scale_max"] = feature_data.max()
+        self.plot_data["scale_min"] = feature_data.min()
         # Flatten data for storage or plotting library compatibility.
-        self.plot_data["data"] = port_data.flatten().tolist()
+        self.plot_data["data"] = feature_data.flatten().tolist()
         self.has_data = True
         return True

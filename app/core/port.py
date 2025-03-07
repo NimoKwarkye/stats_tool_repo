@@ -1,14 +1,29 @@
 import uuid
+import enum
+
+
+class PortType(enum.Enum):
+    DATAFRAMEFLOAT = enum.auto()
+    DATASERIESFLOAT = enum.auto()
+    DATASERIESSTRING = enum.auto()
+    MODELSERIESFLOAT = enum.auto()
+    MODELDATAFRAMEFLOAT = enum.auto()
 
 class Port:
-    def __init__(self, name, port_type, direction):
+    def __init__(self, name:str, port_alias:str, 
+                 port_type:PortType, port_index:int, 
+                 node_id:str, direction:str):
         self.name = name
-        self.alias = name            # e.g. "data", "labels", "model"
-        self.port_type = port_type  # e.g. "DataFrame", "Series", "Model"
+        self.alias = port_alias            # e.g. "data", "labels", "model"
+        self.port_type : PortType = port_type  # e.g. "DataFrame", "Series", "Model"
         self.direction = direction  # "in" or "out"
-        self.value = []
+        self.value = {}
         self.port_open = True
-        self.port_index = 0
+        self.port_index = port_index
+        self.port_id = f"{name}_{node_id}_{direction}put_{port_index}"
+        self.connection = None
+    
+    
 
     
     def __repr__(self):

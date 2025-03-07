@@ -18,9 +18,7 @@ class NodeFactory:
         if type_name not in self.prototypes:
             raise ValueError(f"NodeFactory: Prototype '{type_name}' not registered.")
         # Use deepcopy to clone the prototype.
-        new_node : Node = copy.deepcopy(self.prototypes[type_name])
-        new_node.node_index = node_index
-        new_node.node_id = node_id
+        new_node : Node = self.prototypes[type_name].clone(node_index)
         new_node.position = position
         
         return new_node
@@ -30,20 +28,16 @@ class NodeFactory:
         if type_name not in self.prototypes:
             raise ValueError(f"NodeFactory: Prototype '{type_name}' not registered.")
         # Use deepcopy to clone the prototype.
-        new_node : Node = copy.deepcopy(self.prototypes[type_name])
+        new_index = None
         if len(self.prototypes_count[type_name]["old_types"]) > 0:
-            new_node.node_index = self.prototypes_count[type_name]["old_types"].pop(0)
-            new_node.node_id = f"{type_name}_{new_node.node_index}"
+            new_index = self.prototypes_count[type_name]["old_types"].pop(0)
         else:
-            new_node.node_index = self.prototypes_count[type_name]["count"]
-            new_node.node_id = f"{type_name}_{new_node.node_index}"
+            new_index = self.prototypes_count[type_name]["count"]
             self.prototypes_count[type_name]["count"] += 1
         
+        new_node : Node = self.prototypes[type_name].clone(new_index)
         new_node.position = position
-        for port in new_node.input_ports:
-            port.name+= "##" + new_node.node_id
-        for port in new_node.output_ports:
-            port.name+= "##" + new_node.node_id
+        
         return new_node
 
     def delete_node(self, type_name, node_index):

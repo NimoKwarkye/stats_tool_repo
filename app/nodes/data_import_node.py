@@ -3,10 +3,11 @@ import pandas as pd
 import numpy as np
 from sqlalchemy import create_engine
 from app.core.node import Node
+from app.core.port import PortType
 
 class CSVImportNode(Node):
-    def __init__(self, node_id, name="CSV Import"):
-        super().__init__(node_id, name)
+    def __init__(self, node_index, name="CSV Import"):
+        super().__init__(node_index, name)
         self.params = {
             "filepath": None,
             "csv_sep": ",",
@@ -16,10 +17,10 @@ class CSVImportNode(Node):
             "header": True,
             "drop_xaxis": False,
         }
-        self.add_output_port("featuredata", "DataFrame", "Feature Data")
-        self.add_output_port("xaxisdata", "Series", "X-axis Data")
-        self.add_output_port("targetdata", "Series", "Target Data")
-        self.add_output_port("featurelabels", "Series", "Feature Labels")
+        self.feature_port_id = self.add_output_port("featuredata", PortType.DATAFRAMEFLOAT, "Feature Data")
+        self.xaxis_port_id = self.add_output_port("xaxisdata", PortType.DATASERIESFLOAT, "X-axis Data")
+        self.target_data_port_id = self.add_output_port("targetdata", PortType.DATASERIESFLOAT, "Target Data")
+        self.labels_port_id = self.add_output_port("featurelabels", PortType.DATASERIESSTRING, "Feature Labels")
     
     def load_csv_data(self):
         filepath = self.params.get("filepath")
@@ -45,19 +46,18 @@ class CSVImportNode(Node):
             raise RuntimeError(f"CSVImportNode: Error reading CSV file: {e}")
         # Return a dictionary containing the imported data.
         return {
-            "xaxisdata": xaxis.to_numpy() if xaxis is not None else None,
-            "featurelabels": df.columns.values,
-            "featuredata": df.to_numpy(),
-            "targetdata": target.to_numpy() if target is not None else None,
+            self.xaxis_port_id: xaxis.to_numpy() if xaxis is not None else None,
+            self.labels_port_id: df.columns.values,
+            self.feature_port_id: df.to_numpy(),
+            self.target_data_port_id: target.to_numpy() if target is not None else None,
             # Additional data (e.g. labels) can be added here as needed.
         }
     
     def store_data_in_ports(self, data):
         for port in self.output_ports:
-            key = port.name.split("##")[0]
+            key = port.port_id
             if key in data and data[key] is not None:
-                port.value.clear()
-                port.value.append(data[key])
+                port.value[key] = data[key]
     
     def compute(self):
         print(f"[{self.node_id}] Computing CSV Import...")
@@ -67,18 +67,18 @@ class CSVImportNode(Node):
 
 
 class SQLDBImportNode(Node):
-    def __init__(self, node_id, name="SQL DB Import"):
-        super().__init__(node_id, name)
+    def __init__(self, node_index, name="SQL DB Import"):
+        super().__init__(node_index, name)
         self.params = {
             "connection_string": None,
             "data_query": None,
             "target_query": None,
             "xaxis_query": None,
         }
-        self.add_output_port("featuredata", "DataFrame", "Feature Data")
-        self.add_output_port("xaxisdata", "Series", "X-axis Data")
-        self.add_output_port("targetdata", "Series", "Target Data")
-        self.add_output_port("featurelabels", "Series", "Feature Labels")
+        self.feature_port_id = self.add_output_port("featuredata", PortType.DATAFRAMEFLOAT, "Feature Data")
+        self.xaxis_port_id = self.add_output_port("xaxisdata", PortType.DATASERIESFLOAT, "X-axis Data")
+        self.target_data_port_id = self.add_output_port("targetdata", PortType.DATASERIESFLOAT, "Target Data")
+        self.labels_port_id = self.add_output_port("featurelabels", PortType.DATASERIESSTRING, "Feature Labels")
     
     def load_sql_data(self):
         connection_string = self.params.get("connection_string")
@@ -103,19 +103,18 @@ class SQLDBImportNode(Node):
         except Exception as e:
             raise RuntimeError(f"SQLImportNode: Error reading SQL query: {e}")
         return {
-            "xaxisdata": xaxis.to_numpy() if xaxis is not None else None,
-            "featurelabels": df.columns.values,
-            "featuredata": df.to_numpy(),
-            "targetdata": target.to_numpy() if target is not None else None,
+            self.xaxis_port_id: xaxis.to_numpy() if xaxis is not None else None,
+            self.labels_port_id: df.columns.values,
+            self.feature_port_id: df.to_numpy(),
+            self.target_data_port_id: target.to_numpy() if target is not None else None,
             # If target data comes from SQL you can add it here.
         }
     
     def store_data_in_ports(self, data):
         for port in self.output_ports:
-            key = port.name.split("##")[0]
+            key = port.port_id
             if key in data and data[key] is not None:
-                port.value.clear()
-                port.value.append(data[key])
+                port.value[key] = data[key]
     
     def compute(self):
         print(f"[{self.node_id}] Computing SQL DB Import...")

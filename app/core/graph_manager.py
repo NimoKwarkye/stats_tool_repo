@@ -12,7 +12,7 @@ class GraphManager:
         self.nodes[node.node_id] = node
         print(f"GraphManager: Added node {node.node_id} ({node.name})")
 
-    def connect(self, source_id, source_port_name, target_id, target_port_name):
+    def connect(self, source_id, source_port_id, target_id, target_port_id):
         
         if source_id == target_id:
             return False
@@ -24,13 +24,13 @@ class GraphManager:
             self.logs_handler.add_log("GraphManager: One of the nodes not found.", -1)
             return False
         # Locate the output port from the source and the input port from the target.
-        source_port = next((p for p in source_node.output_ports if p.name == source_port_name), None)
-        target_port = next((p for p in target_node.input_ports if p.name == target_port_name), None)
+        source_port = next((p for p in source_node.output_ports if p.port_id == source_port_id), None)
+        target_port = next((p for p in target_node.input_ports if p.port_id == target_port_id), None)
         
         if target_port is None:
-            target_port = next((p for p in target_node.output_ports if p.name == target_port_name), None)
+            target_port = next((p for p in target_node.output_ports if p.port_id == target_port_id), None)
         if source_port is None:
-            source_port = next((p for p in source_node.input_ports if p.name == source_port_name), None)
+            source_port = next((p for p in source_node.input_ports if p.port_id == source_port_id), None)
 
         if source_port is None or target_port is None:
             return False
@@ -55,10 +55,11 @@ class GraphManager:
         if not target_port.port_open:
             return False
         
-        self.connections.append((source_node.node_id, source_port.name, target_node.node_id, target_port.name))
+        self.connections.append((source_node.node_id, source_port.port_id, target_node.node_id, target_port.port_id))
         # Update the target node’s input with the current value of the source’s output.
-        target_node.set_input(target_port.name, source_port.value)
-        target_node.close_port(target_port.name)
+        target_port.connection = source_port.port_id
+        target_node.set_input(target_port.port_id, source_port.value)
+        target_node.close_port(target_port.port_id)
         #print(f"GraphManager: Connected {source_node.node_id}.{source_port.name} -> {target_node.node_id}.{target_port.name}")
         return True
 
@@ -69,11 +70,11 @@ class GraphManager:
         self.connections = [con for con in self.connections if not node_id  in con]
         self.nodes.pop(node_id)
 
-    def disconnect(self, source_port_name, target_port_name):
+    def disconnect(self, source_port_id, target_port_id):
         for con in self.connections:
-            if source_port_name in con and target_port_name in con:
-                self.nodes[con[2]].open_port(target_port_name)
-        self.connections = [con for con in self.connections if not (source_port_name in con and target_port_name in con)]
+            if source_port_id in con and target_port_id in con:
+                self.nodes[con[2]].open_port(target_port_id)
+        self.connections = [con for con in self.connections if not (source_port_id in con and target_port_id in con)]
         
 
 
@@ -102,17 +103,6 @@ class GraphManager:
             json.dump(data, f, indent=2)
         print(f"GraphManager: Graph saved to {filename}")
 
-    def construct_ports(self, node_id, default_ports):
-        
-        assigned_ports = []
-        for idx, default in enumerate(default_ports):
-            default.port_index = idx
-            default.name = f"{default.name}##{node_id}"
-            assigned_ports.append(default)
-        
-        return assigned_ports
-    
-
 
     def load_from_file(self, filename, node_factory):
         """
@@ -137,8 +127,6 @@ class GraphManager:
             node: Node = node_factory.create_from_file(node_id, position, node_type, node_index)
             # Merge parameters; port entries missing from the file will use the defaults.
             node.params.update(node_data.get('params', {}))
-            node.input_ports = self.construct_ports(node.node_id, node.input_ports)
-            node.output_ports = self.construct_ports(node.node_id, node.output_ports)
             self.nodes[node_id] = node
             print(f"GraphManager: Loaded node {node_id} ({node_type})")
         
@@ -147,6 +135,7 @@ class GraphManager:
             source_node = self.nodes[source_id]
             target_node = self.nodes[target_id]
             target_node.set_input(target_port, source_node.get_output(source_port))
+            target_node.add_connection(target_port, source_port)
             target_node.close_port(target_port)
             print(f"GraphManager: Re-connected {source_id}.{source_port} -> {target_id}.{target_port}")
         print(f"GraphManager: Graph loaded from {filename}")

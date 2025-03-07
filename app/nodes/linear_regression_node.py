@@ -1,31 +1,33 @@
 import numpy as np
 from app.core.node import Node
+from app.core.port import PortType
 from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 
 class SimpleLinearRegressionNode(Node):
-    def __init__(self, node_id, name="Simple Linear Regression"):
-        super().__init__(node_id, name)
+    def __init__(self, node_index, name="Simple Linear Regression"):
+        super().__init__(node_index, name)
         self.params = {
             "slope": 0,
             "intercept": 0,
             "degree": 1,      # Currently fixed to 1 (simple linear regression)
             "r2_score": 0,
         }
-        self.add_input_port("featuredata", "DataFrame", "Feature Data")
-        self.add_input_port("targetdata", "Series", "Target Data")
-        self.add_output_port("fitdata", "Model", "Fit Line")
+        self.feature_port_id = self.add_input_port("featuredata", PortType.DATAFRAMEFLOAT, "Feature Data")
+        self.target_data_port_id = self.add_input_port("targetdata", PortType.DATASERIESFLOAT, "Target Data")
+        self.fit_port_id = self.add_output_port("fitdata", PortType.MODELSERIESFLOAT, "Fit Line")
+
 
     def get_input_data(self):
-        feature_data = None
-        target_data = None
+        ret_data = {}
         for port in self.input_ports:
-            key = port.name.split("##")[0]
-            if key == "featuredata" and port.value:
-                feature_data = port.value[0]
-            elif key == "targetdata" and port.value:
-                target_data = port.value[0]
+            key = port.connection
+            if key in port.value:
+                ret_data[port.port_id] = port.value.get(key)
+        feature_data = ret_data.get(self.feature_port_id)
+        target_data = ret_data.get(self.target_data_port_id)
+            
         return feature_data, target_data
 
     def compute(self):
@@ -57,10 +59,8 @@ class SimpleLinearRegressionNode(Node):
 
             # Store results in the output port.
             for port in self.output_ports:
-                if port.name.split("##")[0] == "fitdata":
-                    port.value.clear()
-                    port.value.append(x.tolist())
-                    port.value.append(fit.tolist())
+                if port.port_id == self.fit_port_id:
+                    port.value[self.fit_port_id] = [x.tolist(), fit.tolist()]
 
             print(f"[{self.node_id}] Computation successful. R²: {self.params['r2_score']:.4f}")
             return True
@@ -69,8 +69,8 @@ class SimpleLinearRegressionNode(Node):
             raise RuntimeError(f"[{self.node_id}] Error during computation: {e}")
 
 class LinearRegressionNode(Node):
-    def __init__(self, node_id, name="Linear Regression"):
-        super().__init__(node_id, name)
+    def __init__(self, node_index, name="Linear Regression"):
+        super().__init__(node_index, name)
         self.params = {
             "test_size": 0.2,
             "nng": False,
@@ -81,22 +81,22 @@ class LinearRegressionNode(Node):
             "coefficients": None,
             "intercept": None,
         }
-        self.add_input_port("featuredata", "DataFrame", "Feature Data")
-        self.add_input_port("targetdata", "Series", "Target Data")
-        self.add_input_port("xaxisdata", "Series", "X-axis Data")
-        self.add_output_port("fitdata", "Model", "Fit Line")
+        self.feature_port_id = self.add_input_port("featuredata", PortType.DATAFRAMEFLOAT, "Feature Data")
+        self.target_data_port_id = self.add_input_port("targetdata", PortType.DATASERIESFLOAT, "Target Data")
+        self.xaxis_port_id = self.add_input_port("xaxisdata", PortType.DATASERIESFLOAT, "X-axis Data")
+        self.fit_port_id = self.add_output_port("fitdata", PortType.MODELSERIESFLOAT, "Fit Line")
 
     def get_input_data(self):
-        feature_data = None
-        target_data = None
+        ret_data = {}
         for port in self.input_ports:
-            key = port.name.split("##")[0]
-            if key == "featuredata" and port.value:
-                feature_data = port.value[0]
-            elif key == "targetdata" and port.value:
-                target_data = port.value[0]
-            elif key == "xaxisdata" and port.value:
-                x_axis_data = port.value[0]
+            key = port.connection
+            if key in port.value:
+                ret_data[port.port_id] = port.value.get(key)
+        
+        feature_data = ret_data.get(self.feature_port_id)
+        target_data = ret_data.get(self.target_data_port_id)
+        x_axis_data = ret_data.get(self.xaxis_port_id)
+            
         return feature_data, target_data, x_axis_data
 
     def compute(self):
@@ -127,10 +127,8 @@ class LinearRegressionNode(Node):
             fitted_line = reg_model.predict(feature_data)
 
             for port in self.output_ports:
-                if port.name.split("##")[0] == "fitdata":
-                    port.value.clear()
-                    port.value.append(x_axis_data.tolist())
-                    port.value.append(fitted_line.tolist())
+                if port.port_id == self.fit_port_id:
+                    port.value[self.fit_port_id] = [x_axis_data.tolist(), fitted_line.tolist()]
 
             print(f"[{self.node_id}] Computation successful. R²: {self.params['r2_score']:.4f}")
             return True

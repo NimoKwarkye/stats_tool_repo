@@ -17,21 +17,19 @@ class BaseNodeUI:
                                    self.node_instance.__class__.__name__],):
             self.node_popup()
             for idx, att in enumerate(self.node_instance.input_ports):
-                self.node_instance.input_ports[idx].port_index = idx
-                with dpg.node_attribute(label=att.name,
+                with dpg.node_attribute(label=att.port_id,
                                     parent=self.node_id,
-                                    tag = att.name + self.node_id + f"input_{idx}",
+                                    tag = att.port_id,
                                     attribute_type=dpg.mvNode_Attr_Input,
-                                    user_data=[self.node_id, att.name]):
+                                    user_data=[self.node_id, att.port_id]):
                     dpg.add_text(att.alias)
             
             for idx, att in enumerate(self.node_instance.output_ports):
-                self.node_instance.output_ports[idx].port_index = idx
-                with dpg.node_attribute(label=att.name,
+                with dpg.node_attribute(label=att.port_id,
                                     parent=self.node_id,
-                                    tag = att.name + self.node_id + f"output_{idx}",
+                                    tag = att.port_id,
                                     attribute_type=dpg.mvNode_Attr_Output,
-                                    user_data=[self.node_id, att.name]):
+                                    user_data=[self.node_id, att.port_id]):
                     dpg.add_text(att.alias)
 
     def node_popup(self):
@@ -44,6 +42,7 @@ class BaseNodeUI:
         raise NotImplementedError
     
     def delete_ui(self):
+        print(f"Deleting node {self.node_id}")
         dpg.delete_item(self.node_id)
     
     

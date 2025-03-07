@@ -132,6 +132,7 @@ def open_jsonfile_dialog_callback(sender, app_data, user_data):
         selected_file = app_data["file_path_name"]
     if os.path.exists(selected_file):
         node_ids = [ky for ky in graph_manager.nodes.keys()]
+        print(node_ids)
         for node_id in node_ids:
             node = graph_manager.get_node(node_id)
             delete_node(node.node_id, node.node_index)
@@ -168,14 +169,12 @@ def create_loaded_nodes():
         ui_manager.update_node_ui(node_id)
     
     for conn in graph_manager.connections:
-        reconnect_loaded_nodes(conn[0], conn[1], conn[2], conn[3])
+        reconnect_loaded_nodes(conn[1], conn[3])
 
 
-def reconnect_loaded_nodes(node_id_1, port_1, node_id_2, port_2):
-    node_1 = graph_manager.get_node(node_id_1)
-    node_2 = graph_manager.get_node(node_id_2)
-    attr_1 = port_1 + node_1.node_id + f"output_{node_1.get_output_port_index(port_1)}"
-    attr_2 = port_2 + node_2.node_id + f"input_{node_2.get_input_port_index(port_2)}"
+def reconnect_loaded_nodes(port_1, port_2):
+    attr_1 = port_1 
+    attr_2 = port_2 
     dpg.add_node_link(attr_1, attr_2, parent=NODE_EDITOR_TAG, user_data=[port_1, port_2])
 
 def delink_callback(sender, app_data, user_data):

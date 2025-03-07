@@ -1,10 +1,11 @@
 import numpy as np
 from app.core.node import Node
 from sklearn.decomposition import PCA
+from app.core.port import PortType
 
 class PCANode(Node):
-    def __init__(self, node_id, name="PCA"):
-        super().__init__(node_id, name)
+    def __init__(self, node_index, name="PCA"):
+        super().__init__(node_index, name)
         self.params = {
             "n_components": 1,
             "copy_data": True,
@@ -16,22 +17,22 @@ class PCANode(Node):
             "power_iteration_normalizer": "auto",
             "n_over_samples": 10,
         }
-        self.add_input_port("featuredata", "DataFrame", "Feature Data")
-        self.add_input_port("featurelabels", "Series", "Feature Labels")
-        self.add_output_port("fitdata", "DataFrame", "PCA Components")
-        #self.add_output_port("fitdata", "Model", "PCA Loadings")
-        #self.add_output_port("fitdata_expl", "Model", "Explained Variance")
-
+        self.feature_port_id = self.add_input_port("featuredata", PortType.DATAFRAMEFLOAT, "Feature Data")
+        self.labels_port_id = self.add_input_port("featurelabels", PortType.DATASERIESSTRING, "Feature Labels")
+        self.fit_data_port_id = self.add_output_port("fitdata_components", PortType.DATAFRAMEFLOAT, "PCA Components")
+        self.loadings_port_id = self.add_output_port("fitdata_loadings", PortType.MODELDATAFRAMEFLOAT, "PCA Loadings")
+        self.explained_variance_port_id = self.add_output_port("fitdata_expl", PortType.MODELSERIESFLOAT, 
+                                                               "Explained Variance")
     
     def get_input_data(self):
-        feature_data = None
-        feature_labels = None
+        ret_data = {}
         for port in self.input_ports:
-            key = port.name.split("##")[0]
-            if key == "featuredata" and port.value:
-                feature_data = port.value[0]
-            elif key == "featurelabels" and port.value:
-                feature_labels = port.value[0]
+            key = port.connection
+            if key in port.value:
+                ret_data[port.port_id] = port.value[key]
+        feature_data = ret_data.get(self.feature_port_id, None)
+        feature_labels = ret_data.get(self.labels_port_id, None)
+
         return feature_data, feature_labels
 
     def compute(self):
@@ -64,10 +65,13 @@ class PCANode(Node):
             pca_explained_variance = pca.explained_variance_ratio_
 
             for port in self.output_ports:
-                if port.name.split("##")[0] == "fitdata":
-                    self.output_ports[0].value.append(pca_components)
-                    #self.output_ports[1].value = pca_loadings
-                    #self.output_ports[2].value = pca_explained_variance
+                if port.port_id == self.fit_data_port_id:
+                    port.value[self.fit_data_port_id] = pca_components
+                elif port.port_id == self.loadings_port_id:
+                    port.value[self.loadings_port_id] = pca_loadings
+                elif port.port_id == self.explained_variance_port_id:
+                    port.value[self.explained_variance_port_id] = pca_explained_variance
+
 
         except Exception as e:
             raise ValueError(f"[{self.node_id}] Error computing PCA: {e}")
