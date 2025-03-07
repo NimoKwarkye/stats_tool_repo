@@ -91,7 +91,7 @@ class HeatmapPlot(BasePlot):
                                 tag=plot_main_tag + "heat", parent=plot_main_tag + "_y", bounds_min=node_params["bounds_min"], 
                                 bounds_max=node_params["bounds_max"], format="", scale_min=plot_data["scale_min"],
                                 scale_max=plot_data["scale_max"])
-            dpg.bind_colormap(plot_region, node_params["colormap"])
+            dpg.bind_colormap(plot_main_tag, node_params["colormap"])
         
         dpg.fit_axis_data(plot_main_tag + "_x")
         dpg.fit_axis_data(plot_main_tag + "_y")
@@ -103,11 +103,11 @@ class PairGridPlot(BasePlot):
         data = np.array(plot_data["data"])
         if data.ndim == 1:
             return
-        n_features = min(data.shape[1], 10)
-        if node_params["labels"] is None:
+        n_features = min(data.shape[1], 5)
+        if plot_data["labels"] is None:
             labels = [f"Var {i+1}" for i in range(n_features)]
         else:
-            labels = node_params["labels"]
+            labels = plot_data["labels"]
         
         self.clear_plot_region(node_params["region"])
         with dpg.subplots(rows=n_features, columns=n_features, parent=node_params["region"], height=-1, width=-1):

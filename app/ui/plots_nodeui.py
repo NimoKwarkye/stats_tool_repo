@@ -289,3 +289,60 @@ class HeatMapPlotNodeUI(BaseNodeUI):
             dpg.set_value(f"{self.ACTION_TAG}_{self.node_id}_plot_area", "Plot 5")
         elif region == PLOT_6_TAG:
             dpg.set_value(f"{self.ACTION_TAG}_{self.node_id}_plot_area", "Plot 6")
+
+class PairGridPlotNodeUI(BaseNodeUI):
+    def __init__(self, node_instance):
+        super().__init__(node_instance)
+        self.INPUT_TAG = dpg.generate_uuid()
+        self.ACTION_TAG = dpg.generate_uuid()
+        self.POP_UP_TAG = dpg.generate_uuid()
+    
+    def node_popup(self):
+        with dpg.popup(tag=f"{self.POP_UP_TAG}_{self.node_id}", 
+                       parent=self.node_id):
+            dpg.add_text("PairGrid Plot Node")
+            dpg.add_separator()
+            dpg.add_input_text(label="Title", hint="Enter the plot title here.", 
+                               tag=f"{self.INPUT_TAG}_{self.node_id}_title")
+            dpg.add_combo(label="Plot Area", tag=f"{self.ACTION_TAG}_{self.node_id}_plot_area",
+                          items=["Plot 1", "Plot 2", "Plot 3", "Plot 4", "Plot 5", "Plot 6"], 
+                          default_value="Plot 1")
+            dpg.add_button(label="Save Changes", callback=self.popup_callback)
+    
+    def popup_callback(self):
+        self.node_instance.params["title"] = dpg.get_value(f"{self.INPUT_TAG}_{self.node_id}_title").strip()
+        
+        rg = dpg.get_value(f"{self.ACTION_TAG}_{self.node_id}_plot_area")
+        if rg == "Plot 1":
+            self.node_instance.params["region"] = PLOT_1_TAG
+        elif rg == "Plot 2":
+            self.node_instance.params["region"] = PLOT_2_TAG
+        elif rg == "Plot 3":
+            self.node_instance.params["region"] = PLOT_3_TAG
+        elif rg == "Plot 4":
+            self.node_instance.params["region"] = PLOT_4_TAG
+        elif rg == "Plot 5":
+            self.node_instance.params["region"] = PLOT_5_TAG
+        elif rg == "Plot 6":
+            self.node_instance.params["region"] = PLOT_6_TAG
+
+        dpg.hide_item(f"{self.POP_UP_TAG}_{self.node_id}")
+    
+    def update_ui(self):
+        dpg.set_value(f"{self.INPUT_TAG}_{self.node_id}_title",
+                      self.node_instance.params["title"])
+        
+        region = self.node_instance.params["region"]
+        if region == PLOT_1_TAG:
+            dpg.set_value(f"{self.ACTION_TAG}_{self.node_id}_plot_area", "Plot 1")
+        elif region == PLOT_2_TAG:
+            dpg.set_value(f"{self.ACTION_TAG}_{self.node_id}_plot_area", "Plot 2")
+        elif region == PLOT_3_TAG:
+            dpg.set_value(f"{self.ACTION_TAG}_{self.node_id}_plot_area", "Plot 3")
+        elif region == PLOT_4_TAG:
+            dpg.set_value(f"{self.ACTION_TAG}_{self.node_id}_plot_area", "Plot 4")
+        elif region == PLOT_5_TAG:
+            dpg.set_value(f"{self.ACTION_TAG}_{self.node_id}_plot_area", "Plot 5")
+        elif region == PLOT_6_TAG:
+            dpg.set_value(f"{self.ACTION_TAG}_{self.node_id}_plot_area", "Plot 6")
+            

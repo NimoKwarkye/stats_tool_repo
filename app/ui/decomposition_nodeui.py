@@ -76,8 +76,7 @@ class PCANodeUI(BaseNodeUI):
                       self.node_instance.params["svd_solver"])
         dpg.set_value(f"{self.INPUT_TAG}_{self.node_id}_tol",
                       self.node_instance.params["tol"])
-        dpg.set_value(f"{self.INPUT_TAG}_{self.node_id}_iterated_power",
-                      self.node_instance.params["iterated_power"])
+        
         dpg.set_value(f"{self.INPUT_TAG}_{self.node_id}_power_iteration_normalizer",
                       self.node_instance.params["power_iteration_normalizer"])
         dpg.set_value(f"{self.INPUT_TAG}_{self.node_id}_n_over_samples",
@@ -87,3 +86,9 @@ class PCANodeUI(BaseNodeUI):
         else:
             dpg.set_value(f"{self.INPUT_TAG}_{self.node_id}_random_state",
                         self.node_instance.params["random_state"])
+            
+        if self.node_instance.params["iterated_power"] == "auto":
+            dpg.set_value(f"{self.INPUT_TAG}_{self.node_id}_iterated_power", 0)
+        else:
+            dpg.set_value(f"{self.INPUT_TAG}_{self.node_id}_iterated_power",
+                          self.node_instance.params["iterated_power"])

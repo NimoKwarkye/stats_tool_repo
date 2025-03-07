@@ -23,6 +23,8 @@ class PCANode(Node):
         self.loadings_port_id = self.add_output_port("fitdata_loadings", PortType.MODELDATAFRAMEFLOAT, "PCA Loadings")
         self.explained_variance_port_id = self.add_output_port("fitdata_expl", PortType.MODELSERIESFLOAT, 
                                                                "Explained Variance")
+        self.pca_component_names = self.add_output_port("pca_component_names", PortType.DATASERIESSTRING,
+                                                        "PCA Component Labels")
     
     def get_input_data(self):
         ret_data = {}
@@ -57,12 +59,13 @@ class PCANode(Node):
                 iterated_power=self.params["iterated_power"],
                 random_state=self.params["random_state"],
                 power_iteration_normalizer=self.params["power_iteration_normalizer"],
-                n_over_samples=self.params["n_over_samples"],
+                n_oversamples=self.params["n_over_samples"],
             )
             pca.fit(feature_data)
             pca_components = pca.transform(feature_data)
             pca_loadings = pca.components_
             pca_explained_variance = pca.explained_variance_ratio_
+            pca_component_names = [f"PC{i+1}" for i in range(pca.n_components_)]
 
             for port in self.output_ports:
                 if port.port_id == self.fit_data_port_id:
@@ -71,6 +74,8 @@ class PCANode(Node):
                     port.value[self.loadings_port_id] = pca_loadings
                 elif port.port_id == self.explained_variance_port_id:
                     port.value[self.explained_variance_port_id] = pca_explained_variance
+                elif port.port_id == self.pca_component_names:
+                    port.value[self.pca_component_names] = pca_component_names
 
 
         except Exception as e:

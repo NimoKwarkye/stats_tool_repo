@@ -107,26 +107,18 @@ class HeatMapPlotNode(Node):
         return True
 
 
-class PairGridPlotNode:
+class PairGridPlotNode(Node):
     def __init__(self, node_index, name="PairGrid Plot"):
         super().__init__(node_index, name)
         self.has_data = False
         self.params = {
             "title": "title", 
-            "xlabel": "x", 
-            "ylabel": "y",
             "region": "plot_1",
-            "colormap": 0,
-            "bounds_min": [0, 0],
-            "bounds_max": [1, 1],
             "plot_type": "pairgrid",
         }
         self.plot_data = {
             "data": None, 
-            "scale_max": None,
-            "rows": None,
-            "cols": None, 
-            "scale_min": None,
+            "labels": None,
         }
         self.feature_port_id = self.add_input_port("featuredata", PortType.DATAFRAMEFLOAT, "Feature Data")
         self.labels_port_id = self.add_input_port("featurelabels", PortType.DATASERIESSTRING, "Feature Labels")
@@ -147,13 +139,7 @@ class PairGridPlotNode:
         if feature_data is None:
             raise ValueError("PairGridPlot: No data provided")
         
-        # Expecting feature_data to be a NumPy array or convertible
-        feature_data = np.array(feature_data)
-        self.plot_data["rows"] = feature_data.shape[0]
-        self.plot_data["cols"] = feature_data.shape[1]
-        self.plot_data["scale_max"] = feature_data.max()
-        self.plot_data["scale_min"] = feature_data.min()
-        # Flatten data for storage or plotting library compatibility.
-        self.plot_data["data"] = feature_data.flatten().tolist()
+        self.plot_data["data"] = feature_data
+        self.plot_data["labels"] = feature_labels
         self.has_data = True
         return True

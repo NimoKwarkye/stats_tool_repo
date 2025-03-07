@@ -3,73 +3,25 @@ import dearpygui.dearpygui as dpg
 from app.core.node import Node
 from app.core.graph_manager import GraphManager
 from app.core.node_factory import NodeFactory
-from app.nodes.data_import_node import CSVImportNode, SQLDBImportNode
-from app.nodes.linear_regression_node import SimpleLinearRegressionNode, LinearRegressionNode
-from app.nodes.data_plots_nodes import XYScatterPlotNode, HeatMapPlotNode
 from app.ui.plot_area import PlotArea
-from app.ui.data_import_nodeui import CSVImportNodeUI, SQLDBImportNodeUI
-from app.nodes.decomposition_nodes import PCANode
-from app.ui.decomposition_nodeui import PCANodeUI
-from app.ui.regression_nodeui import SimpleLinearRegressionNodeUI, LinearRegressionNodeUI
-from app.ui.plots_nodeui import HeatMapPlotNodeUI, XYScatterPlotNodeUI
 from app.ui.ui_manager import NodeUIManager
 from app.utils.log_handler import LogHandler 
 from app.utils.constants import EDITOR_TAG, FUNCTIONS_PANEL_TAG, NODE_EDITOR_PANEL_TAG, \
                                 NODE_EDITOR_TAG, OPENFILE_DIALOG_TAG, REF_NODE_TAG, CSVIMPORT_DRAG_ID, \
                                 LINEAR_REG_DRAG_ID, SCATTER_PLOT_DRAG_ID,  LOG_WINDOW_TAG, \
                                 SQLDB_IMPORT_DRAG_ID, HEATMAP_PLOT_DRAG_ID, SMP_LINEAR_REG_DRAG_ID, \
-                                PCA_DRAG_ID
+                                PCA_DRAG_ID, PAIR_GRID_PLOT_DRAG_ID
+from app.utils.node_config import NODE_CONFIG
+from collections import defaultdict
 
-NODE_UI_MAPPING = {
-    CSVIMPORT_DRAG_ID: CSVImportNodeUI,
-    SMP_LINEAR_REG_DRAG_ID: SimpleLinearRegressionNodeUI,
-    SQLDB_IMPORT_DRAG_ID: SQLDBImportNodeUI,
-    LINEAR_REG_DRAG_ID: LinearRegressionNodeUI,
-    HEATMAP_PLOT_DRAG_ID: HeatMapPlotNodeUI,
-    SCATTER_PLOT_DRAG_ID: XYScatterPlotNodeUI,
-    PCA_DRAG_ID: PCANodeUI
-    }
 
-NODE_DRAG_TEXT = {
-    CSVIMPORT_DRAG_ID: "Add a New CSV Data Import Node",
-    SMP_LINEAR_REG_DRAG_ID: "Add a Simple Linear Regression Node",
-    SQLDB_IMPORT_DRAG_ID: "Add a New SQL DB Import Node",
-    HEATMAP_PLOT_DRAG_ID: "Add a HeatMap Plot Node",
-    SCATTER_PLOT_DRAG_ID: "Add a XY Scatter Plot Node",
-    LINEAR_REG_DRAG_ID: "Add a Linear Regression Node",
-    PCA_DRAG_ID: "Add a PCA Node"
-}
+NODE_UI_MAPPING = { key: config["ui_class"] for key, config in NODE_CONFIG.items() }
+NODE_IDS = { key: f"{config['prototype_id']}{dpg.generate_uuid()}" for key, config in NODE_CONFIG.items() }
+NODE_CLASS = { key: config["node_class"] for key, config in NODE_CONFIG.items() }
 
-NODE_DRAG_BTN_NAMES = {
-    CSVIMPORT_DRAG_ID: "CSV Data Import",
-    SQLDB_IMPORT_DRAG_ID: "SQL DB Import",
-    HEATMAP_PLOT_DRAG_ID: "HeatMap Plot",
-    SCATTER_PLOT_DRAG_ID: "XY Scatter Plot",
-    SMP_LINEAR_REG_DRAG_ID: "Simple LR",
-    LINEAR_REG_DRAG_ID: "Linear Regression",
-    PCA_DRAG_ID: "PCA"
-}
-
-NODE_IDS={
-    CSVIMPORT_DRAG_ID: f"proto_csv{dpg.generate_uuid()}",
-    SMP_LINEAR_REG_DRAG_ID: f"proto_smplr_{dpg.generate_uuid()}",
-    SQLDB_IMPORT_DRAG_ID: f"proto_sql_{dpg.generate_uuid()}",
-    HEATMAP_PLOT_DRAG_ID: f"proto_heatmap_{dpg.generate_uuid()}",
-    SCATTER_PLOT_DRAG_ID: f"proto_scatter_plot_{dpg.generate_uuid()}",
-    LINEAR_REG_DRAG_ID: f"proto_linrg_{dpg.generate_uuid()}",
-    PCA_DRAG_ID: f"proto_pca_{dpg.generate_uuid()}"
-
-}
-
-NODE_CLASS={
-    CSVIMPORT_DRAG_ID: CSVImportNode,
-    SMP_LINEAR_REG_DRAG_ID: SimpleLinearRegressionNode,
-    SQLDB_IMPORT_DRAG_ID: SQLDBImportNode,
-    HEATMAP_PLOT_DRAG_ID: HeatMapPlotNode,
-    SCATTER_PLOT_DRAG_ID: XYScatterPlotNode,
-    LINEAR_REG_DRAG_ID: LinearRegressionNode,
-    PCA_DRAG_ID: PCANode
-}
+nodes_by_category = defaultdict(list)
+for node_name, config in NODE_CONFIG.items():
+    nodes_by_category[config["category"]].append(config)
 
 ui_manager = NodeUIManager(NODE_UI_MAPPING)
 graph_manager = GraphManager()
@@ -89,6 +41,9 @@ def execute_graph():
                 if node.has_data:
                     plot_area.plot_manager.plot(node.params, node.plot_data)
             elif node.__class__.__name__ == HEATMAP_PLOT_DRAG_ID:
+                if node.has_data:
+                    plot_area.plot_manager.plot(node.params, node.plot_data)
+            elif node.__class__.__name__ == PAIR_GRID_PLOT_DRAG_ID:
                 if node.has_data:
                     plot_area.plot_manager.plot(node.params, node.plot_data)
             elif node.__class__.__name__ == LINEAR_REG_DRAG_ID:
@@ -255,10 +210,12 @@ def setup_ui():
             with dpg.table_row():
                 with dpg.child_window(tag=FUNCTIONS_PANEL_TAG, border=False):
                     with dpg.group():
-                        for key, value in NODE_DRAG_BTN_NAMES.items():
-                            dpg.add_button(label=value, width=-1)
-                            with dpg.drag_payload(parent=dpg.last_item(), drag_data=key):
-                                dpg.add_text(NODE_DRAG_TEXT[key])
+                        for category, node_configs in nodes_by_category.items():
+                            with dpg.tree_node(label=f"{category} Nodes"):
+                                for config in node_configs:
+                                    dpg.add_button(label=config["drag_btn_name"], width=-1)
+                                    with dpg.drag_payload(parent=dpg.last_item(), drag_data=config["drag_id"]):
+                                        dpg.add_text(config["drag_text"])
 
                         
                 
