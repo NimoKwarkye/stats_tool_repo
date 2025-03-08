@@ -59,7 +59,7 @@ class PCANode(Node):
             )
             pca.fit(feature_data)
             pca_components = pca.transform(feature_data)
-            pca_loadings = pca.components_
+            pca_loadings = pca.components_.T * np.sqrt(pca.explained_variance_)
             pca_explained_variance = pca.explained_variance_ratio_
             pca_component_names = [f"PC{i+1}" for i in range(pca.n_components_)]
 
@@ -134,7 +134,7 @@ class NMFNode(Node):
             )
             nmf.fit(feature_data)
             nmf_components = nmf.transform(feature_data)
-            nmf_loadings = nmf.components_
+            nmf_loadings = nmf.components_.transpose()
             nmf_labels = [f"Cmp {i+1}" for i in range(nmf.n_components)]
 
             for port in self.output_ports:
@@ -142,6 +142,8 @@ class NMFNode(Node):
                     port.value[self.fit_data_port_id] = nmf_components
                 elif port.port_id == self.loadings_port_id:
                     port.value[self.loadings_port_id] = nmf_loadings
+                elif port.port_id == self.labels_port_id:
+                    port.value[self.labels_port_id] = nmf_labels
         except Exception as e:
             raise ValueError(f"[{self.node_id}] Error computing NMF: {e}")
 
