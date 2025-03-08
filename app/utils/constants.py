@@ -25,6 +25,7 @@ SCATTER_PLOT_DRAG_ID = "XYScatterPlotNode"
 SQLDB_IMPORT_DRAG_ID = "SQLDBImportNode"
 HEATMAP_PLOT_DRAG_ID = "HeatMapPlotNode"
 PCA_DRAG_ID = "PCANode"
+NMF_DRAG_ID = "NMFNode"
 PAIR_GRID_PLOT_DRAG_ID = "PairGridPlotNode"
 KMEANS_DRAG_ID = "KMeansNode"
 

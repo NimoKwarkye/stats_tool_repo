@@ -3,16 +3,16 @@ from app.ui.data_import_nodeui import CSVImportNodeUI
 from app.ui.regression_nodeui import SimpleLinearRegressionNodeUI, LinearRegressionNodeUI
 from app.ui.data_import_nodeui import SQLDBImportNodeUI
 from app.ui.plots_nodeui import HeatMapPlotNodeUI, XYScatterPlotNodeUI, PairGridPlotNodeUI
-from app.ui.decomposition_nodeui import PCANodeUI
+from app.ui.decomposition_nodeui import PCANodeUI, NMFNodeUI
 from app.nodes.data_import_node import CSVImportNode, SQLDBImportNode
 from app.nodes.linear_regression_node import SimpleLinearRegressionNode, LinearRegressionNode
 from app.nodes.data_plots_nodes import HeatMapPlotNode, XYScatterPlotNode, PairGridPlotNode
-from app.nodes.decomposition_nodes import PCANode
+from app.nodes.decomposition_nodes import PCANode, NMFNode
 from app.utils.constants import EDITOR_TAG, FUNCTIONS_PANEL_TAG, NODE_EDITOR_PANEL_TAG, \
                                 NODE_EDITOR_TAG, OPENFILE_DIALOG_TAG, REF_NODE_TAG, CSVIMPORT_DRAG_ID, \
                                 LINEAR_REG_DRAG_ID, SCATTER_PLOT_DRAG_ID,  LOG_WINDOW_TAG, \
                                 SQLDB_IMPORT_DRAG_ID, HEATMAP_PLOT_DRAG_ID, SMP_LINEAR_REG_DRAG_ID, \
-                                PCA_DRAG_ID, PAIR_GRID_PLOT_DRAG_ID
+                                PCA_DRAG_ID, PAIR_GRID_PLOT_DRAG_ID, NMF_DRAG_ID
 
 NODE_CONFIG = {
     "CSVImportNode": {
@@ -74,7 +74,7 @@ NODE_CONFIG = {
         "ui_class": PCANodeUI,
         "node_class": PCANode,
         "drag_text": "Add a PCA Node",
-        "drag_btn_name": "PCA",
+        "drag_btn_name": "Principal Component Analysis",
         "prototype_id": f"proto_pca_{dpg.generate_uuid()}",
         "category": "Decomposition"
     },
@@ -87,4 +87,13 @@ NODE_CONFIG = {
         "prototype_id": f"proto_pairgrid_{dpg.generate_uuid()}",
         "category": "Plot"
     },
+    "NMFNode": {
+        "drag_id": NMF_DRAG_ID,
+        "ui_class": NMFNodeUI,
+        "node_class": NMFNode,
+        "drag_text": "Add a NMF Node",
+        "drag_btn_name": "Non-negative Matrix Factorization",
+        "prototype_id": f"proto_nmf_{dpg.generate_uuid()}",
+        "category": "Decomposition"
+    }
 }

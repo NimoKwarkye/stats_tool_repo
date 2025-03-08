@@ -35,20 +35,25 @@ for key in NODE_CLASS:
 
 def execute_graph():
     if graph_manager.execute():
-        for node_id in graph_manager.nodes.keys():
-            node:Node = graph_manager.get_node(node_id)
-            if node.__class__.__name__ == SCATTER_PLOT_DRAG_ID:
-                if node.has_data:
-                    plot_area.plot_manager.plot(node.params, node.plot_data)
-            elif node.__class__.__name__ == HEATMAP_PLOT_DRAG_ID:
-                if node.has_data:
-                    plot_area.plot_manager.plot(node.params, node.plot_data)
-            elif node.__class__.__name__ == PAIR_GRID_PLOT_DRAG_ID:
-                if node.has_data:
-                    plot_area.plot_manager.plot(node.params, node.plot_data)
-            elif node.__class__.__name__ == LINEAR_REG_DRAG_ID:
-                ui_manager.update_node_ui(node_id)
-        logs_handler.add_log("Graph executed successfully.")
+        try:
+            for node_id in graph_manager.nodes.keys():
+                node:Node = graph_manager.get_node(node_id)
+                if node.__class__.__name__ == SCATTER_PLOT_DRAG_ID:
+                    if node.has_data:
+                        plot_area.plot_manager.plot(node.params, node.plot_data)
+                elif node.__class__.__name__ == HEATMAP_PLOT_DRAG_ID:
+                    if node.has_data:
+                        plot_area.plot_manager.plot(node.params, node.plot_data)
+                elif node.__class__.__name__ == PAIR_GRID_PLOT_DRAG_ID:
+                    if node.has_data:
+                        plot_area.plot_manager.plot(node.params, node.plot_data)
+                elif node.__class__.__name__ == LINEAR_REG_DRAG_ID:
+                    ui_manager.update_node_ui(node_id)
+                elif node.__class__.__name__ == SMP_LINEAR_REG_DRAG_ID:
+                    ui_manager.update_node_ui(node_id)
+            logs_handler.add_log("Graph executed successfully.")
+        except Exception as e:
+            logs_handler.add_log(f"Error executing graph: {e}", -1)
         
 
 def get_relative_mouse_pos(ref_object:str):
@@ -80,6 +85,7 @@ def save_jsonfile_dialog_callback(sender, app_data, user_data):
     logs_handler.add_log("Graph saved successfully.")
 
 def open_jsonfile_dialog_callback(sender, app_data, user_data):
+    logs_handler.add_log("Loading Graph")
     selected_file = None
     if app_data["selections"].__len__() > 0:
         selected_file = list(app_data['selections'].items())[0][1]
@@ -170,7 +176,7 @@ def save_graph_callback():
 def load_graph_callback():
     if dpg.does_item_exist(f"{OPENFILE_DIALOG_TAG}_json_open"):
         dpg.show_item(f"{OPENFILE_DIALOG_TAG}_json_open")
-        logs_handler.add_log("Loading Graph")
+        
 
 
 def delete_selected_nodes(sender, app_data, user_data):

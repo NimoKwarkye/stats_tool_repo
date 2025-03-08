@@ -23,7 +23,6 @@ class GraphManager:
         if not source_node or not target_node:
             self.logs_handler.add_log("GraphManager: One of the nodes not found.", -1)
             return False
-        # Locate the output port from the source and the input port from the target.
         source_port = next((p for p in source_node.output_ports if p.port_id == source_port_id), None)
         target_port = next((p for p in target_node.input_ports if p.port_id == target_port_id), None)
         
@@ -38,10 +37,6 @@ class GraphManager:
         if target_port.direction == source_port.direction:
             return False
         
-        # Enforce type safety.
-        if source_port.port_type != target_port.port_type:
-            return False
-        
         if target_port.direction == "out":
             
             temp_port = target_port
@@ -52,15 +47,16 @@ class GraphManager:
             target_node = source_node
             source_node = temp_node
         
+        if source_port.port_type not in target_port.port_type:
+            return False
+        
         if not target_port.port_open:
             return False
         
         self.connections.append((source_node.node_id, source_port.port_id, target_node.node_id, target_port.port_id))
-        # Update the target node’s input with the current value of the source’s output.
         target_port.connection = source_port.port_id
         target_node.set_input(target_port.port_id, source_port.value)
         target_node.close_port(target_port.port_id)
-        #print(f"GraphManager: Connected {source_node.node_id}.{source_port.name} -> {target_node.node_id}.{target_port.name}")
         return True
 
     def remove_node(self, node_id):
@@ -112,25 +108,20 @@ class GraphManager:
         with open(filename, 'r') as f:
             data = json.load(f)
         
-        # Clear current state
         self.nodes.clear()
         self.connections = data.get('connections', [])
         node_factory.prototypes_count.update(data.get("node_factory", {}))
         
-        # Reconstruct nodes
         for node_data in data.get('nodes', []):
             node_type = node_data.get('node_type')
             node_id = node_data.get('node_id')
             position = node_data.get('position')
             node_index = node_data.get("node_index", 0)
-            # Create a new node instance using the factory.
             node: Node = node_factory.create_from_file(node_id, position, node_type, node_index)
-            # Merge parameters; port entries missing from the file will use the defaults.
             node.params.update(node_data.get('params', {}))
             self.nodes[node_id] = node
             print(f"GraphManager: Loaded node {node_id} ({node_type})")
         
-        # Re-establish connections (and update target node inputs)
         for source_id, source_port, target_id, target_port in self.connections:
             source_node = self.nodes[source_id]
             target_node = self.nodes[target_id]
@@ -150,19 +141,15 @@ class GraphManager:
             self.logs_handler.add_log("GraphManager: No connections found.", 1)
             return False
 
-        # Compute the number of incoming connections for each node.
         incoming_count = {node_id: 0 for node_id in self.nodes}
         for source_id, _, target_id, _ in self.connections:
             incoming_count[target_id] += 1
 
-        # Collect source nodes: those with zero incoming connections and that are connected.
-        # (If no such node exists, default to all nodes acting as source connection.)
         queue  = [node for node in self.nodes.values()
                  if incoming_count[node.node_id] == 0 and any(node.node_id in conn for conn in self.connections)]
         if not queue:
             queue = [node for node in self.nodes.values() if node.node_id == conn[0] for conn in self.connections]
         
-        # Topologically sort using Kahn's algorithm.
         sorted_nodes = []
         while queue:
             node = queue.pop(0)
@@ -173,7 +160,6 @@ class GraphManager:
                     if incoming_count[target_id] == 0:
                         queue.append(self.nodes[target_id])
         
-        # Execute nodes in sorted order.
         for node in sorted_nodes:
             try:
                 node.compute()

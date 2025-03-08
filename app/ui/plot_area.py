@@ -40,32 +40,49 @@ class ScatterPlot(BasePlot):
     def plot(self, node_params, plot_data):
         plot_region = node_params["region"]
         self.clear_plot_region(plot_region)
+        if plot_data["y"].ndim == 1 or plot_data["y"].shape[-1] == 1:
+            y_data = list(plot_data["y"].flatten())
+            plot_main_tag = plot_region + f"_main_{dpg.generate_uuid()}"
+            plot_main_theme_tag = plot_region + f"_main_theme_{dpg.generate_uuid()}"
+            self.track_tags[plot_region].append(plot_main_tag)
+            self.track_tags[plot_region].append(plot_main_theme_tag)
 
-        plot_main_tag = plot_region + f"_main_{dpg.generate_uuid()}"
-        plot_main_theme_tag = plot_region + f"_main_theme_{dpg.generate_uuid()}"
-        self.track_tags[plot_region].append(plot_main_tag)
-        self.track_tags[plot_region].append(plot_main_theme_tag)
+            with dpg.plot(label=f"{node_params['title']}", 
+                        height=-1, width=-1, parent=plot_region, tag=plot_main_tag):   
+                dpg.add_plot_legend()
+                dpg.add_plot_axis(dpg.mvXAxis, label=node_params["xlabel"], tag=plot_main_tag + "_x")
+                dpg.add_plot_axis(dpg.mvYAxis, label=node_params["ylabel"], tag=plot_main_tag + "_y")
+                dpg.add_scatter_series(plot_data["x"], y_data, label=plot_data["plot_label"][0],
+                                    tag=plot_main_tag + "scatter", parent=plot_main_tag + "_y")
+                self.create_scatter_theme(plot_main_theme_tag, node_params["marker_color"], node_params["marker_style"])
+                dpg.bind_item_theme(plot_main_tag + "scatter", plot_main_theme_tag)
 
-        with dpg.plot(label=f"Plot {self.plot_tags.index(node_params['region']) + 1}", 
-                      height=-1, width=-1, parent=plot_region, tag=plot_main_tag):   
-            dpg.add_plot_legend()
-            dpg.add_plot_axis(dpg.mvXAxis, label=node_params["xlabel"], tag=plot_main_tag + "_x")
-            dpg.add_plot_axis(dpg.mvYAxis, label=node_params["ylabel"], tag=plot_main_tag + "_y")
-            dpg.add_scatter_series(plot_data["x"], plot_data["y"], label=node_params["plot_label"],
-                                   tag=plot_main_tag + "scatter", parent=plot_main_tag + "_y")
-            self.create_scatter_theme(plot_main_theme_tag, node_params["marker_color"], node_params["marker_style"])
-            dpg.bind_item_theme(plot_main_tag + "scatter", plot_main_theme_tag)
-
-            if len(plot_data["trend_line"]) > 0:
-                fit_tag = plot_region + f"_fit_{dpg.generate_uuid()}"
-                fit_theme_tag = plot_region + f"_fit_theme_{dpg.generate_uuid()}"
-                self.track_tags[plot_region].append(fit_tag)
-                self.track_tags[plot_region].append(fit_theme_tag)
                 
-                dpg.add_line_series(plot_data["trend_line"][0], plot_data["trend_line"][1],
-                                    label=node_params["fit_label"], tag=fit_tag, parent=plot_main_tag + "_y")
-                self.create_line_theme(fit_theme_tag, node_params["line_color"])
-                dpg.bind_item_theme(fit_tag, fit_theme_tag)
+        else:
+            features = plot_data["y"].shape[1]
+            plot_main_tag = plot_region + f"_main_{dpg.generate_uuid()}"
+            for ft in range(features):
+                self.track_tags[plot_region].append(plot_main_tag + f"_{ft}")
+            with dpg.plot(label=f"{node_params['title']}",
+                          height=-1, width=-1, parent=plot_region, tag=plot_main_tag):   
+                dpg.add_plot_legend()
+                dpg.add_plot_axis(dpg.mvXAxis, label=node_params["xlabel"], tag=plot_main_tag + "_x")
+                dpg.add_plot_axis(dpg.mvYAxis, label=node_params["ylabel"], tag=plot_main_tag + "_y")
+                for ft in range(features):
+                    dpg.add_scatter_series(plot_data["x"], plot_data["y"][:, ft].tolist(), 
+                                        label=plot_data["plot_label"][ft], tag=plot_main_tag + f"_{ft}", 
+                                        parent=plot_main_tag + "_y")
+                   
+        if len(plot_data["trend_line"]) > 0:
+            fit_tag = plot_region + f"_fit_{dpg.generate_uuid()}"
+            fit_theme_tag = plot_region + f"_fit_theme_{dpg.generate_uuid()}"
+            self.track_tags[plot_region].append(fit_tag)
+            self.track_tags[plot_region].append(fit_theme_tag)
+            
+            dpg.add_line_series(plot_data["trend_line"][0], plot_data["trend_line"][1],
+                                label=node_params["fit_label"], tag=fit_tag, parent=plot_main_tag + "_y")
+            self.create_line_theme(fit_theme_tag, node_params["line_color"])
+            dpg.bind_item_theme(fit_tag, fit_theme_tag)
         
         dpg.fit_axis_data(plot_main_tag + "_x")
         dpg.fit_axis_data(plot_main_tag + "_y")
@@ -82,7 +99,7 @@ class HeatmapPlot(BasePlot):
         plot_main_tag = plot_region + f"_main_{dpg.generate_uuid()}"
         self.track_tags[plot_region].append(plot_main_tag)
 
-        with dpg.plot(label=f"Plot {self.plot_tags.index(node_params['region']) + 1}", 
+        with dpg.plot(label=f"{node_params['title']}", 
                       height=-1, width=-1, parent=plot_region, tag=plot_main_tag):   
             dpg.add_plot_legend()
             dpg.add_plot_axis(dpg.mvXAxis, label=node_params["xlabel"], tag=plot_main_tag + "_x")

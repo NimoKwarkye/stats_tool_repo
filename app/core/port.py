@@ -1,5 +1,5 @@
-import uuid
 import enum
+from typing import Union
 
 
 class PortType(enum.Enum):
@@ -11,11 +11,11 @@ class PortType(enum.Enum):
 
 class Port:
     def __init__(self, name:str, port_alias:str, 
-                 port_type:PortType, port_index:int, 
+                 port_type:Union[PortType, list[PortType]], port_index:int, 
                  node_id:str, direction:str):
         self.name = name
         self.alias = port_alias            # e.g. "data", "labels", "model"
-        self.port_type : PortType = port_type  # e.g. "DataFrame", "Series", "Model"
+        self.port_type : Union[PortType, list[PortType]] = port_type  # e.g. "DataFrame", "Series", "Model"
         self.direction = direction  # "in" or "out"
         self.value = {}
         self.port_open = True

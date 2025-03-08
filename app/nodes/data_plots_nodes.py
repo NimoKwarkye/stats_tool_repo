@@ -22,10 +22,17 @@ class XYScatterPlotNode(Node):
             "x": None, 
             "y": None, 
             "trend_line": [],
+            "plot_label": None,
         }
-        self.xaxisdata_port_id = self.add_input_port("xaxisdata", PortType.DATASERIESFLOAT, "X Data")
-        self.targetdata_port_id = self.add_input_port("targetdata", PortType.DATASERIESFLOAT, "Y Data")
-        self.fitdata_port_id = self.add_input_port("fitdata", PortType.MODELSERIESFLOAT, "Fit Line")
+        self.xaxisdata_port_id = self.add_input_port("xaxisdata", [PortType.DATASERIESFLOAT], "X Data")
+        self.targetdata_port_id = self.add_input_port("targetdata", 
+                                                      [PortType.DATASERIESFLOAT, 
+                                                       PortType.DATAFRAMEFLOAT, 
+                                                       PortType.MODELDATAFRAMEFLOAT,
+                                                       PortType.MODELSERIESFLOAT], 
+                                                       "Y Data")
+        self.fitdata_port_id = self.add_input_port("fitdata", [PortType.MODELSERIESFLOAT], "Fit Line")
+        self.labels_port_id = self.add_input_port("labels", [PortType.DATASERIESSTRING], "Feature Labels")
     
     def get_port_value(self):
         """Helper that returns the first value of the input port with the given key."""
@@ -36,17 +43,32 @@ class XYScatterPlotNode(Node):
         x_data = ret_data.get(self.xaxisdata_port_id)
         y_data = ret_data.get(self.targetdata_port_id)
         fit_data = ret_data.get(self.fitdata_port_id)
-        return x_data, y_data, fit_data
+        feature_labels = ret_data.get(self.labels_port_id)
+        return x_data, y_data, fit_data, feature_labels
 
     def compute(self):
         print(f"[{self.node_id}] Computing XY Scatter Plot...")
-        x_data, y_data, port_fit = self.get_port_value()
+        x_data, y_data, port_fit, labels = self.get_port_value()
         
-        if x_data is None or y_data is None:
-            raise ValueError(f"[{self.node_id}] Missing required X or Y data.")
+        if y_data is None:
+            raise ValueError(f"[{self.node_id}] Missing required Y data.")
         
+        if x_data is None:
+            x_data = np.arange(len(y_data))
+
         self.plot_data["x"] = list(x_data)
-        self.plot_data["y"] = list(y_data)
+        self.plot_data["y"] = y_data
+        if labels is not None:
+            self.plot_data["plot_label"] = labels
+        else:
+            if y_data.ndim == 1:
+                self.plot_data["plot_label"] = [self.params["plot_label"]]
+            else:
+                entered_labels = self.params["plot_label"].split(",")
+                if len(entered_labels) == y_data.shape[1]:
+                    self.plot_data["plot_label"] = entered_labels
+                else: 
+                    self.plot_data["plot_label"] = [f"series {i + 1}" for i in range(y_data.shape[1])] 
         
         if port_fit is not None and len(port_fit) >= 2:
             # Store both x-values and trend line.
@@ -79,7 +101,7 @@ class HeatMapPlotNode(Node):
             "cols": None, 
             "scale_min": None,
         }
-        self.feature_port_id = self.add_input_port("featuredata", PortType.DATAFRAMEFLOAT, "Feature Data")
+        self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, PortType.MODELDATAFRAMEFLOAT], "Feature Data")
     
     def get_port_value(self):
         """Helper that returns the first value of the input port with the given key."""
@@ -120,8 +142,8 @@ class PairGridPlotNode(Node):
             "data": None, 
             "labels": None,
         }
-        self.feature_port_id = self.add_input_port("featuredata", PortType.DATAFRAMEFLOAT, "Feature Data")
-        self.labels_port_id = self.add_input_port("featurelabels", PortType.DATASERIESSTRING, "Feature Labels")
+        self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, PortType.MODELDATAFRAMEFLOAT], "Feature Data")
+        self.labels_port_id = self.add_input_port("featurelabels", [PortType.DATASERIESSTRING], "Feature Labels")
     
     def get_port_value(self):
         """Helper that returns the first value of the input port with the given key."""

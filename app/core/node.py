@@ -18,7 +18,7 @@ class Node(ABC):
         new_node = self.__class__(node_index, self.name)
         return new_node
     
-    def add_input_port(self, name:str, port_type:PortType, port_alias=""):
+    def add_input_port(self, name:str, port_type:list[PortType], port_alias=""):
         if len(port_alias) == 0:
             port_alias = name
         port_index = len(self.input_ports)
