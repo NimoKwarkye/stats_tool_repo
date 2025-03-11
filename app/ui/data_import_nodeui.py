@@ -39,7 +39,8 @@ class CSVImportNodeUI(BaseNodeUI):
                                     tag=f"{self.INPUT_TAG}_{self.node_id}_xaxis")
                 dpg.add_checkbox(label="Drop X-axis", default_value=False, 
                                  tag=f"{self.ACTION_TAG}_{self.node_id}_drop")
-            
+            dpg.add_input_text(label="Target Label Column", hint="Enter the target label column.",
+                                tag=f"{self.INPUT_TAG}_{self.node_id}_target_label")
             dpg.add_input_text(label="Drop Columns", hint="Enter the columns to drop sperated by comma.", 
                                tag=f"{self.INPUT_TAG}_{self.node_id}_drop_cols")
             dpg.add_button(label="Save Changes", callback=self.popup_callback)
@@ -48,6 +49,7 @@ class CSVImportNodeUI(BaseNodeUI):
         self.node_instance.params["filepath"] = dpg.get_value(f"{self.INPUT_TAG}_{self.node_id}_filepath").strip()
         self.node_instance.params["target_col"] = dpg.get_value(f"{self.INPUT_TAG}_{self.node_id}_target").strip()
         self.node_instance.params["xaxis_col"] = dpg.get_value(f"{self.INPUT_TAG}_{self.node_id}_xaxis").strip()
+        self.node_instance.params["target_label_col"] = dpg.get_value(f"{self.INPUT_TAG}_{self.node_id}_target_label").strip()
         self.node_instance.params["header"] = dpg.get_value(f"{self.ACTION_TAG}_{self.node_id}_header")
         self.node_instance.params["drop_xaxis"] = dpg.get_value(f"{self.ACTION_TAG}_{self.node_id}_drop")
         drop_cols = dpg.get_value(f"{self.INPUT_TAG}_{self.node_id}_drop_cols")
@@ -81,6 +83,8 @@ class CSVImportNodeUI(BaseNodeUI):
                     self.node_instance.params["header"])
         dpg.set_value(f"{self.ACTION_TAG}_{self.node_id}_drop",
                     self.node_instance.params["drop_xaxis"])
+        dpg.set_value(f"{self.INPUT_TAG}_{self.node_id}_target_label",
+                    self.node_instance.params["target_label_col"])
         
         radio_value = self.node_instance.params["csv_sep"]
 
@@ -93,9 +97,6 @@ class CSVImportNodeUI(BaseNodeUI):
         elif radio_value == ":":
             dpg.set_value(f"{self.ACTION_TAG}_{self.node_id}_delimit", "Colon")
     
-    
-
-
 
 class SQLDBImportNodeUI(BaseNodeUI):
     
@@ -120,6 +121,9 @@ class SQLDBImportNodeUI(BaseNodeUI):
                                    tag=f"{self.INPUT_TAG}_{self.node_id}_target")
             dpg.add_input_text(label="X-axis Query", hint="Enter importing x-axis data query here.",
                                    tag=f"{self.INPUT_TAG}_{self.node_id}_xaxis")
+            dpg.add_input_text(label="Target Label Query", hint="Enter importing target label query here.",
+                                   tag=f"{self.INPUT_TAG}_{self.node_id}_target_label")
+
             dpg.add_button(label="Save Changes", callback=self.popup_callback)
     
     def popup_callback(self):
@@ -127,6 +131,7 @@ class SQLDBImportNodeUI(BaseNodeUI):
         self.node_instance.params["data_query"] = dpg.get_value(f"{self.INPUT_TAG}_{self.node_id}_data").strip()
         self.node_instance.params["target_query"] = dpg.get_value(f"{self.INPUT_TAG}_{self.node_id}_target").strip()
         self.node_instance.params["xaxis_query"] = dpg.get_value(f"{self.INPUT_TAG}_{self.node_id}_xaxis").strip()
+        self.node_instance.params["target_label_query"] = dpg.get_value(f"{self.INPUT_TAG}_{self.node_id}_target_label").strip()
         dpg.hide_item(f"{self.POP_UP_TAG}_{self.node_id}")
     
     def update_ui(self):
@@ -138,3 +143,5 @@ class SQLDBImportNodeUI(BaseNodeUI):
                     self.node_instance.params["target_query"])
         dpg.set_value(f"{self.INPUT_TAG}_{self.node_id}_xaxis",
                     self.node_instance.params["xaxis_query"])
+        dpg.set_value(f"{self.INPUT_TAG}_{self.node_id}_target_label",
+                    self.node_instance.params["target_label_query"])

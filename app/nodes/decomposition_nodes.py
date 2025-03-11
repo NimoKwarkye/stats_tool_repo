@@ -131,6 +131,8 @@ class NMFNode(Node):
                 alpha_W=self.params["alpha_W"],
                 l1_ratio=self.params["l1_ratio"],
                 random_state=self.params["random_state"],
+                shuffle=self.params["shuffle"],
+                verbose=0,
             )
             nmf.fit(feature_data)
             nmf_components = nmf.transform(feature_data)

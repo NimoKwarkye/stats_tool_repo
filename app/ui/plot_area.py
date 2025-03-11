@@ -1,7 +1,7 @@
 import dearpygui.dearpygui as dpg
 import numpy as np
 from app.utils.constants import PLOT_AREA_TAG, PLOT_1_TAG, PLOT_2_TAG, PLOT_3_TAG, PLOT_4_TAG, PLOT_5_TAG, PLOT_6_TAG
-
+import colorsys
 
 class BasePlot:
     def __init__(self):
@@ -9,6 +9,7 @@ class BasePlot:
         self.track_tags = {}
         for tag in self.plot_tags:
             self.track_tags[tag] = []
+        self.colors = self.generate_30_rgba()
     
     def clear_plot_region(self, plot_region: str):
         dpg.delete_item(plot_region, children_only=True)
@@ -31,6 +32,45 @@ class BasePlot:
                 dpg.add_theme_style(dpg.mvPlotStyleVar_Marker, marker_style, category=dpg.mvThemeCat_Plots)
                 dpg.add_theme_style(dpg.mvPlotStyleVar_MarkerSize, 4, category=dpg.mvThemeCat_Plots)
     
+    def generate_marker_colors(self, num_colors=30):
+        colors = []
+        for i in range(num_colors):
+            hue = i / num_colors
+            # High saturation and brightness for contrast on dark background
+            saturation = 0.9
+            value = 0.95
+            r, g, b = colorsys.hsv_to_rgb(hue, saturation, value)
+            # Convert to 0-255 integer values and full alpha (255)
+            colors.append((int(r * 255), int(g * 255), int(b * 255), 255))
+        return colors
+    def generate_30_rgba(self):
+        # Begin with primary colors:
+        # Red, Green, Blue, Cyan, Magenta, Yellow, and White (in place of Black)
+        primary_colors = [
+            (255, 0, 0, 255),    # Red
+            (0, 255, 0, 255),    # Green
+            (0, 0, 255, 255),    # Blue
+            (0, 255, 255, 255),  # Cyan
+            (255, 0, 255, 255),  # Magenta
+            (255, 255, 0, 255),  # Yellow
+            (255, 255, 255, 255) # White
+        ]
+        
+        total_colors = 30
+        remaining = total_colors - len(primary_colors)  # 23 additional colors
+        
+        additional_colors = []
+        # Generate additional colors with high saturation and brightness.
+        for i in range(remaining):
+            hue = i / remaining  # even spacing across 0-1
+            saturation = 0.9
+            value = 0.95
+            r, g, b = colorsys.hsv_to_rgb(hue, saturation, value)
+            rgba = (int(r * 255), int(g * 255), int(b * 255), 255)
+            additional_colors.append(rgba)
+        
+        return primary_colors + additional_colors
+    
     def plot(self, node_params, plot_data):
         raise NotImplementedError
 
@@ -42,36 +82,84 @@ class ScatterPlot(BasePlot):
         self.clear_plot_region(plot_region)
         if plot_data["y"].ndim == 1 or plot_data["y"].shape[-1] == 1:
             y_data = list(plot_data["y"].flatten())
+            data_dict = {}
+            if plot_data["target_label"] is not None and \
+                plot_data["target_label"].shape[0] == plot_data["y"].shape[0]:
+                unique_labels = np.unique(plot_data["target_label"])
+                for label in unique_labels:
+                    indices = [i for i, l in enumerate(plot_data["target_label"]) if l == label]
+    
+                    y_values = [y_data[i] for i in indices]
+                    x_values = [plot_data["x"][i] for i in indices]
+                    
+                    data_dict[label] = [ x_values, y_values]
+            else:
+                data_dict[plot_data["plot_label"][0]] = [plot_data["x"], y_data]
+                
+
+                
             plot_main_tag = plot_region + f"_main_{dpg.generate_uuid()}"
             plot_main_theme_tag = plot_region + f"_main_theme_{dpg.generate_uuid()}"
             self.track_tags[plot_region].append(plot_main_tag)
-            self.track_tags[plot_region].append(plot_main_theme_tag)
 
             with dpg.plot(label=f"{node_params['title']}", 
                         height=-1, width=-1, parent=plot_region, tag=plot_main_tag):   
                 dpg.add_plot_legend()
                 dpg.add_plot_axis(dpg.mvXAxis, label=node_params["xlabel"], tag=plot_main_tag + "_x")
                 dpg.add_plot_axis(dpg.mvYAxis, label=node_params["ylabel"], tag=plot_main_tag + "_y")
-                dpg.add_scatter_series(plot_data["x"], y_data, label=plot_data["plot_label"][0],
-                                    tag=plot_main_tag + "scatter", parent=plot_main_tag + "_y")
-                self.create_scatter_theme(plot_main_theme_tag, node_params["marker_color"], node_params["marker_style"])
-                dpg.bind_item_theme(plot_main_tag + "scatter", plot_main_theme_tag)
+                for idx, label in enumerate(data_dict.keys()):
+                    this_plot_tag = plot_main_tag + f"scatter{label}_{idx}"
+                    dpg.add_scatter_series(data_dict[label][0], data_dict[label][0], label=label,
+                                        tag=this_plot_tag, parent=plot_main_tag + "_y")
+                    this_theme_tag = plot_main_theme_tag + f"_{label}_{idx}"
+                    self.create_scatter_theme(this_theme_tag, self.colors[idx%30], node_params["marker_style"])
+                    dpg.bind_item_theme(this_plot_tag, this_theme_tag)
+                    self.track_tags[plot_region].append(this_theme_tag)
 
                 
         else:
             features = plot_data["y"].shape[1]
             plot_main_tag = plot_region + f"_main_{dpg.generate_uuid()}"
-            for ft in range(features):
-                self.track_tags[plot_region].append(plot_main_tag + f"_{ft}")
+            self.track_tags[plot_region].append(plot_main_tag)
+            data_dict = {}
+            use_target_labels = False
+            if plot_data["target_label"] is not None and \
+                plot_data["target_label"].shape[0] == plot_data["y"].shape[0]:
+                unique_labels = np.unique(plot_data["target_label"])
+                use_target_labels = True
+                for label in unique_labels:
+                    indices = [i for i, l in enumerate(plot_data["target_label"]) if l == label]
+                    y_values = plot_data["y"][indices, :]
+                    x_values = [plot_data["x"][i] for i in indices]
+                    data_dict[label] = [x_values, y_values]
+            else:
+                for i in range(features):
+                    data_dict[plot_data["plot_label"][i]] = [plot_data["x"], plot_data["y"][:, i]]
+
+            
             with dpg.plot(label=f"{node_params['title']}",
                           height=-1, width=-1, parent=plot_region, tag=plot_main_tag):   
                 dpg.add_plot_legend()
                 dpg.add_plot_axis(dpg.mvXAxis, label=node_params["xlabel"], tag=plot_main_tag + "_x")
                 dpg.add_plot_axis(dpg.mvYAxis, label=node_params["ylabel"], tag=plot_main_tag + "_y")
-                for ft in range(features):
-                    dpg.add_scatter_series(plot_data["x"], plot_data["y"][:, ft].tolist(), 
-                                        label=plot_data["plot_label"][ft], tag=plot_main_tag + f"_{ft}", 
+                for idx, label in enumerate(data_dict.keys()):
+                    y_data = []
+                    x_data = []
+                    this_plot_tag = plot_main_tag + f"scatter{label}_{idx}"
+                    if use_target_labels:
+                        for ft in range(features):
+                            y_data += data_dict[label][1][:, ft].tolist()
+                            x_data += data_dict[label][0]
+                    else:
+                        y_data = list(data_dict[label][1])
+                        x_data = list(data_dict[label][0])
+                    dpg.add_scatter_series(x_data, y_data, 
+                                        label=label, tag=this_plot_tag, 
                                         parent=plot_main_tag + "_y")
+                    this_theme_tag = plot_main_tag + f"_theme_{label}_{idx}"
+                    self.create_scatter_theme(this_theme_tag, self.colors[idx%30], node_params["marker_style"])
+                    dpg.bind_item_theme(this_plot_tag, this_theme_tag)
+                    self.track_tags[plot_region].append(this_theme_tag)
                    
         if len(plot_data["trend_line"]) > 0:
             fit_tag = plot_region + f"_fit_{dpg.generate_uuid()}"
@@ -140,9 +228,24 @@ class PairGridPlot(BasePlot):
                         if i == j:
                             dpg.add_plot_annotation(label=labels[i], default_value=(0.5, 0.5), parent=cell_tag)
                         else:
-                            x = data[:, j].tolist()
-                            y = data[:, i].tolist()
-                            dpg.add_scatter_series(x, y, label=f"{labels[j]} vs {labels[i]}", parent=y_axis_tag)
+                            if plot_data["target_label"] is not None and \
+                                plot_data["target_label"].shape[0] == data.shape[0]:
+                                unique_labels = np.unique(plot_data["target_label"])
+                                for idx, label in enumerate(unique_labels):
+                                    indices = [k for k, l in enumerate(plot_data["target_label"]) if l == label]
+                                    x = data[indices, j].tolist()
+                                    y = data[indices, i].tolist()
+                                    this_plot_tag = cell_tag + f"scatter_{label}_{idx}"
+                                    dpg.add_scatter_series(x, y, label=label, parent=y_axis_tag, tag=this_plot_tag)
+                                    this_plot_theme = cell_tag + f"_theme_{label}_{idx}"
+                                    self.create_scatter_theme(this_plot_theme, self.colors[idx%30])
+                                    dpg.bind_item_theme(this_plot_tag, this_plot_theme)
+                                    self.track_tags[node_params["region"]].append(this_plot_theme)
+                                    self.track_tags[node_params["region"]].append(this_plot_tag)
+                            else:
+                                x = data[:, j].tolist()
+                                y = data[:, i].tolist()
+                                dpg.add_scatter_series(x, y, label=f"{labels[j]} vs {labels[i]}", parent=y_axis_tag)
                             
                         dpg.fit_axis_data(x_axis_tag)
                         dpg.fit_axis_data(y_axis_tag)
