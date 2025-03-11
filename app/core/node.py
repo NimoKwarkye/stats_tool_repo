@@ -36,6 +36,21 @@ class Node(ABC):
         return port.port_id
     
     
+    def get_input_data(self):
+        ret_data = {}
+        for port in self.input_ports:
+            key = port.connection
+            if key in port.value:
+                ret_data[port.port_id] = port.value[key]
+
+        return ret_data
+    
+    def store_data_in_ports(self, data):
+        for port in self.output_ports:
+            key = port.port_id
+            if key in data and data[key] is not None:
+                port.value[key] = data[key]
+
     def set_input(self, port_id, value):
         for port in self.input_ports:
             if port.port_id == port_id:

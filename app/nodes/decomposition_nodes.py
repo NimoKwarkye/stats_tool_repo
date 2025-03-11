@@ -24,20 +24,11 @@ class PCANode(Node):
                                                                "Explained Variance")
         self.pca_component_names = self.add_output_port("pca_component_names", PortType.DATASERIESSTRING,
                                                         "PCA Component Labels")
-    
-    def get_input_data(self):
-        ret_data = {}
-        for port in self.input_ports:
-            key = port.connection
-            if key in port.value:
-                ret_data[port.port_id] = port.value[key]
-        feature_data = ret_data.get(self.feature_port_id, None)
-
-        return feature_data
 
     def compute(self):
         print(f"[{self.node_id}] Computing PCA...")
-        feature_data = self.get_input_data()
+        feature_data = self.get_input_data().get(self.feature_port_id)
+        
         if feature_data is None:
             raise ValueError(f"[{self.node_id}] Missing input data.")
 
@@ -62,16 +53,14 @@ class PCANode(Node):
             pca_loadings = pca.components_.T * np.sqrt(pca.explained_variance_)
             pca_explained_variance = pca.explained_variance_ratio_
             pca_component_names = [f"PC{i+1}" for i in range(pca.n_components_)]
-
-            for port in self.output_ports:
-                if port.port_id == self.fit_data_port_id:
-                    port.value[self.fit_data_port_id] = pca_components
-                elif port.port_id == self.loadings_port_id:
-                    port.value[self.loadings_port_id] = pca_loadings
-                elif port.port_id == self.explained_variance_port_id:
-                    port.value[self.explained_variance_port_id] = pca_explained_variance
-                elif port.port_id == self.pca_component_names:
-                    port.value[self.pca_component_names] = pca_component_names
+            
+            output_names = {
+                self.fit_data_port_id: pca_components,
+                self.loadings_port_id: pca_loadings,
+                self.explained_variance_port_id: pca_explained_variance,
+                self.pca_component_names: pca_component_names,
+            }
+            self.store_data_in_ports(output_names)
 
 
         except Exception as e:
@@ -100,19 +89,9 @@ class NMFNode(Node):
         self.labels_port_id = self.add_output_port("fitdata_labels", PortType.DATASERIESSTRING, "Component Labels")
     
 
-    def get_input_data(self):
-        ret_data = {}
-        for port in self.input_ports:
-            key = port.connection
-            if key in port.value:
-                ret_data[port.port_id] = port.value[key]
-        feature_data = ret_data.get(self.feature_port_id, None)
-
-        return feature_data
-
     def compute(self):
         print(f"[{self.node_id}] Computing NMF...")
-        feature_data = self.get_input_data()
+        feature_data = self.get_input_data().get(self.feature_port_id)
         if feature_data is None:
             raise ValueError(f"[{self.node_id}] Missing input data.")
         try:
@@ -139,13 +118,13 @@ class NMFNode(Node):
             nmf_loadings = nmf.components_.transpose()
             nmf_labels = [f"Cmp {i+1}" for i in range(nmf.n_components)]
 
-            for port in self.output_ports:
-                if port.port_id == self.fit_data_port_id:
-                    port.value[self.fit_data_port_id] = nmf_components
-                elif port.port_id == self.loadings_port_id:
-                    port.value[self.loadings_port_id] = nmf_loadings
-                elif port.port_id == self.labels_port_id:
-                    port.value[self.labels_port_id] = nmf_labels
+            output_names = {
+                self.fit_data_port_id: nmf_components,
+                self.loadings_port_id: nmf_loadings,
+                self.labels_port_id: nmf_labels,
+            }
+            self.store_data_in_ports(output_names)
+           
         except Exception as e:
             raise ValueError(f"[{self.node_id}] Error computing NMF: {e}")
 

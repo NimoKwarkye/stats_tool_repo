@@ -8,11 +8,14 @@ from app.nodes.data_import_node import CSVImportNode, SQLDBImportNode
 from app.nodes.linear_regression_node import SimpleLinearRegressionNode, LinearRegressionNode
 from app.nodes.data_plots_nodes import HeatMapPlotNode, XYScatterPlotNode, PairGridPlotNode
 from app.nodes.decomposition_nodes import PCANode, NMFNode
+from app.nodes.clustering_nodes import KMeansNode, DBSCANNode
+from app.ui.clustering_nodeui import KmeansNodeUI, DBSCANNodeUI
 from app.utils.constants import EDITOR_TAG, FUNCTIONS_PANEL_TAG, NODE_EDITOR_PANEL_TAG, \
                                 NODE_EDITOR_TAG, OPENFILE_DIALOG_TAG, REF_NODE_TAG, CSVIMPORT_DRAG_ID, \
                                 LINEAR_REG_DRAG_ID, SCATTER_PLOT_DRAG_ID,  LOG_WINDOW_TAG, \
                                 SQLDB_IMPORT_DRAG_ID, HEATMAP_PLOT_DRAG_ID, SMP_LINEAR_REG_DRAG_ID, \
-                                PCA_DRAG_ID, PAIR_GRID_PLOT_DRAG_ID, NMF_DRAG_ID
+                                PCA_DRAG_ID, PAIR_GRID_PLOT_DRAG_ID, NMF_DRAG_ID, KMEANS_DRAG_ID, \
+                                DBSCAN_DRAG_ID 
 
 NODE_CONFIG = {
     "CSVImportNode": {
@@ -95,5 +98,23 @@ NODE_CONFIG = {
         "drag_btn_name": "Non-negative Matrix Factorization",
         "prototype_id": f"proto_nmf_{dpg.generate_uuid()}",
         "category": "Decomposition"
-    }
+    },
+    "KMeansNode": {
+        "drag_id": KMEANS_DRAG_ID,
+        "ui_class": KmeansNodeUI,
+        "node_class": KMeansNode,
+        "drag_text": "Add a KMeans Clustering Node",
+        "drag_btn_name": "KMeans Clustering",
+        "prototype_id": f"proto_kmeans_{dpg.generate_uuid()}",
+        "category": "Clustering"
+        },
+    "DBSCANNode": {
+        "drag_id": DBSCAN_DRAG_ID,
+        "ui_class": DBSCANNodeUI,
+        "node_class": DBSCANNode,
+        "drag_text": "Add a DBSCAN Clustering Node",
+        "drag_btn_name": "DBSCAN Clustering",
+        "prototype_id": f"proto_dbscan_{dpg.generate_uuid()}",
+        "category": "Clustering"
+        }
 }

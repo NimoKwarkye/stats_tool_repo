@@ -28,6 +28,7 @@ PCA_DRAG_ID = "PCANode"
 NMF_DRAG_ID = "NMFNode"
 PAIR_GRID_PLOT_DRAG_ID = "PairGridPlotNode"
 KMEANS_DRAG_ID = "KMeansNode"
+DBSCAN_DRAG_ID = "DBSCANNode"
 
 # Other tags
 POP_UP_TAG = "pop_up"

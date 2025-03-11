@@ -36,22 +36,15 @@ class XYScatterPlotNode(Node):
         self.labels_port_id = self.add_input_port("labels", [PortType.DATASERIESSTRING], "Feature Labels")
         self.target_labels_port_id = self.add_input_port("targetlabels", [PortType.DATASERIESSTRING], "Target Labels")
     
-    def get_port_value(self):
-        """Helper that returns the first value of the input port with the given key."""
-        ret_data = {}
-        for port in self.input_ports:
-            if port.connection in port.value:
-                ret_data[port.port_id] = port.value[port.connection]
-        x_data = ret_data.get(self.xaxisdata_port_id)
-        y_data = ret_data.get(self.targetdata_port_id)
-        fit_data = ret_data.get(self.fitdata_port_id)
-        feature_labels = ret_data.get(self.labels_port_id)
-        target_labels = ret_data.get(self.target_labels_port_id)
-        return x_data, y_data, fit_data, feature_labels, target_labels
 
     def compute(self):
         print(f"[{self.node_id}] Computing XY Scatter Plot...")
-        x_data, y_data, port_fit, labels, target_labels = self.get_port_value()
+        port_data = self.get_input_data()
+        x_data = port_data.get(self.xaxisdata_port_id)
+        y_data = port_data.get(self.targetdata_port_id)
+        fit_data = port_data.get(self.fitdata_port_id)
+        feature_labels = port_data.get(self.labels_port_id)
+        target_labels = port_data.get(self.target_labels_port_id)
         
         if y_data is None:
             raise ValueError(f"[{self.node_id}] Missing required Y data.")
@@ -62,8 +55,8 @@ class XYScatterPlotNode(Node):
         self.plot_data["x"] = list(x_data)
         self.plot_data["y"] = y_data
         self.plot_data["target_label"] = target_labels
-        if labels is not None:
-            self.plot_data["plot_label"] = labels
+        if feature_labels is not None:
+            self.plot_data["plot_label"] = feature_labels
         else:
             if y_data.ndim == 1:
                 self.plot_data["plot_label"] = [self.params["plot_label"]]
@@ -74,9 +67,9 @@ class XYScatterPlotNode(Node):
                 else: 
                     self.plot_data["plot_label"] = [f"series {i + 1}" for i in range(y_data.shape[1])] 
         
-        if port_fit is not None and len(port_fit) >= 2:
+        if fit_data is not None and len(fit_data) >= 2:
             # Store both x-values and trend line.
-            self.plot_data["trend_line"] = [port_fit[0], port_fit[1]]
+            self.plot_data["trend_line"] = [fit_data[0], fit_data[1]]
         else:
             self.plot_data["trend_line"] = []
         
@@ -107,17 +100,11 @@ class HeatMapPlotNode(Node):
         }
         self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, PortType.MODELDATAFRAMEFLOAT], "Feature Data")
     
-    def get_port_value(self):
-        """Helper that returns the first value of the input port with the given key."""
-        for port in self.input_ports:
-
-            if port.connection in port.value:
-                return port.value[port.connection]
-        return None
+    
 
     def compute(self):
         print(f"[{self.node_id}] Computing HeatMap Plot...")
-        port_data = self.get_port_value()
+        port_data = self.get_input_data().get(self.feature_port_id)
         if port_data is None:
             raise ValueError("HeatMapPlot: No data provided")
         
@@ -152,20 +139,14 @@ class PairGridPlotNode(Node):
         self.labels_port_id = self.add_input_port("featurelabels", [PortType.DATASERIESSTRING], "Feature Labels")
         self.target_labels_port_id = self.add_input_port("targetlabels", [PortType.DATASERIESSTRING], "Target Labels")
     
-    def get_port_value(self):
-        """Helper that returns the first value of the input port with the given key."""
-        ret_data = {}
-        for port in self.input_ports:
-            if port.connection in port.value:
-                ret_data[port.port_id] = port.value[port.connection]
-        feature_data = ret_data.get(self.feature_port_id)
-        feature_labels = ret_data.get(self.labels_port_id)
-        target_labels = ret_data.get(self.target_labels_port_id)
-        return feature_data, feature_labels, target_labels
+    
 
     def compute(self):
         print(f"[{self.node_id}] Computing PairGrid Plot...")
-        feature_data, feature_labels, target_labels = self.get_port_value()
+        ret_data = self.get_input_data()
+        feature_data = ret_data.get(self.feature_port_id)
+        feature_labels = ret_data.get(self.labels_port_id)
+        target_labels = ret_data.get(self.target_labels_port_id)
         if feature_data is None:
             raise ValueError("PairGridPlot: No data provided")
         

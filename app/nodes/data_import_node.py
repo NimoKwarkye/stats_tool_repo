@@ -58,11 +58,6 @@ class CSVImportNode(Node):
             self.target_lables_port_id: target_labels.to_numpy() if target_labels is not None else None
         }
     
-    def store_data_in_ports(self, data):
-        for port in self.output_ports:
-            key = port.port_id
-            if key in data and data[key] is not None:
-                port.value[key] = data[key]
     
     def compute(self):
         print(f"[{self.node_id}] Computing CSV Import...")
@@ -120,11 +115,6 @@ class SQLDBImportNode(Node):
             self.target_labels_port_id: target_labels.to_numpy() if target_labels is not None else None
             }
     
-    def store_data_in_ports(self, data):
-        for port in self.output_ports:
-            key = port.port_id
-            if key in data and data[key] is not None:
-                port.value[key] = data[key]
     
     def compute(self):
         print(f"[{self.node_id}] Computing SQL DB Import...")

@@ -19,48 +19,34 @@ class SimpleLinearRegressionNode(Node):
         self.fit_port_id = self.add_output_port("fitdata", PortType.MODELSERIESFLOAT, "Fit Line")
 
 
-    def get_input_data(self):
-        ret_data = {}
-        for port in self.input_ports:
-            key = port.connection
-            if key in port.value:
-                ret_data[port.port_id] = port.value.get(key)
-        feature_data = ret_data.get(self.feature_port_id)
-        target_data = ret_data.get(self.target_data_port_id)
-            
-        return feature_data, target_data
 
     def compute(self):
         print(f"[{self.node_id}] Computing Simple Linear Regression...")
-        feature_data, target_data = self.get_input_data()
+        ret_data = self.get_input_data()
+        feature_data = ret_data.get(self.feature_port_id)
+        target_data = ret_data.get(self.target_data_port_id)
+
         if feature_data is None or target_data is None:
             raise ValueError(f"[{self.node_id}] Missing input data.")
 
         try:
-            # Convert inputs to NumPy arrays.
             feature_data = np.array(feature_data)
             target_data = np.array(target_data)
 
-            # Ensure feature_data is 2D; use the first column for fitting.
             if feature_data.ndim == 1:
                 feature_data = feature_data.reshape(-1, 1)
             x = feature_data[:, 0]
 
-            # Compute slope and intercept using polyfit (degree 1).
             slope, intercept = np.polyfit(x, target_data, self.params["degree"])
             self.params["slope"] = slope
             self.params["intercept"] = intercept
 
-            # Compute fitted values.
             fit = slope * x + intercept
 
-            # Calculate R² score.
             self.params["r2_score"] = r2_score(target_data, fit)
 
-            # Store results in the output port.
-            for port in self.output_ports:
-                if port.port_id == self.fit_port_id:
-                    port.value[self.fit_port_id] = [x.tolist(), fit.tolist()]
+            output_data ={self.fit_port_id: [x.tolist(), fit.tolist()]}
+            self.store_data_in_ports(output_data)
 
             print(f"[{self.node_id}] Computation successful. R²: {self.params['r2_score']:.4f}")
             return True
@@ -86,22 +72,14 @@ class LinearRegressionNode(Node):
         self.xaxis_port_id = self.add_input_port("xaxisdata", [PortType.DATASERIESFLOAT, PortType.MODELSERIESFLOAT], "X-axis Data")
         self.fit_port_id = self.add_output_port("fitdata", PortType.MODELSERIESFLOAT, "Fit Line")
 
-    def get_input_data(self):
-        ret_data = {}
-        for port in self.input_ports:
-            key = port.connection
-            if key in port.value:
-                ret_data[port.port_id] = port.value.get(key)
-        
-        feature_data = ret_data.get(self.feature_port_id)
-        target_data = ret_data.get(self.target_data_port_id)
-        x_axis_data = ret_data.get(self.xaxis_port_id)
-            
-        return feature_data, target_data, x_axis_data
 
     def compute(self):
         print(f"[{self.node_id}] Computing Linear Regression...")
-        feature_data, target_data, x_axis_data = self.get_input_data()
+        ret_data = self.get_input_data()
+        feature_data = ret_data.get(self.feature_port_id)
+        target_data = ret_data.get(self.target_data_port_id)
+        x_axis_data = ret_data.get(self.xaxis_port_id)
+
         if feature_data is None or target_data is None or x_axis_data is None:
             raise ValueError(f"[{self.node_id}] Missing input data.")
 
@@ -125,10 +103,9 @@ class LinearRegressionNode(Node):
             if feature_data.ndim == 1:
                 feature_data = feature_data.reshape(-1, 1)
             fitted_line = reg_model.predict(feature_data)
-
-            for port in self.output_ports:
-                if port.port_id == self.fit_port_id:
-                    port.value[self.fit_port_id] = [x_axis_data.tolist(), fitted_line.tolist()]
+            
+            output_data = {self.fit_port_id: [x_axis_data.tolist(), fitted_line.tolist()]}
+            self.store_data_in_ports(output_data)
 
             print(f"[{self.node_id}] Computation successful. R²: {self.params['r2_score']:.4f}")
             return True
