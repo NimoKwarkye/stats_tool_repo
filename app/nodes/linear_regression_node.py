@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from app.core.node import Node
 from app.core.port import PortType
 from sklearn.metrics import r2_score
@@ -18,7 +19,16 @@ class SimpleLinearRegressionNode(Node):
         self.target_data_port_id = self.add_input_port("targetdata", [PortType.DATASERIESFLOAT, PortType.MODELSERIESFLOAT], "Y Data")
         self.fit_port_id = self.add_output_port("fitdata", PortType.MODELSERIESFLOAT, "Fit Line")
 
-
+    def pre_save(self):
+        save_data = {
+            
+        }
+        save_data["intercept"] = [self.params["intercept"]]
+        for i in range(len(self.params["slope"])):
+            save_data[f"coef_{i+1}"] = [self.params["slope"][i]]
+        
+        df = pd.DataFrame(save_data)
+        return [self.compose_dir_name(self.feature_port_id), {"simple_linear_regression": df}]
 
     def compute(self):
         print(f"[{self.node_id}] Computing Simple Linear Regression...")
@@ -37,7 +47,8 @@ class SimpleLinearRegressionNode(Node):
                 feature_data = feature_data.reshape(-1, 1)
             x = feature_data[:, 0]
 
-            slope, intercept = np.polyfit(x, target_data, self.params["degree"])
+            slope = np.polyfit(x, target_data, self.params["degree"])
+            intercept = slope[-1]
             self.params["slope"] = slope
             self.params["intercept"] = intercept
 
@@ -68,9 +79,40 @@ class LinearRegressionNode(Node):
             "intercept": None,
         }
         self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, PortType.MODELDATAFRAMEFLOAT], "Feature Data")
-        self.target_data_port_id = self.add_input_port("targetdata", [PortType.DATASERIESFLOAT, PortType.MODELSERIESFLOAT], "Target Data")
+        self.feature_labels_port_id = self.add_input_port("featurelabels", [PortType.DATASERIESSTRING], "Feature Labels")
+        self.target_data_port_id = self.add_input_port("targetdata", [PortType.DATASERIESFLOAT, 
+                                                                      PortType.MODELSERIESFLOAT], "Target Data")
+        
         self.xaxis_port_id = self.add_input_port("xaxisdata", [PortType.DATASERIESFLOAT, PortType.MODELSERIESFLOAT], "X-axis Data")
         self.fit_port_id = self.add_output_port("fitdata", PortType.MODELSERIESFLOAT, "Fit Line")
+
+    def pre_save(self):
+        input_data = self.get_input_data()
+        feature_labels = input_data.get(self.feature_labels_port_id)
+        save_dir = self.compose_dir_name(self.feature_port_id)
+
+        labels = None
+        if feature_labels is not None:
+            labels = [f"{i}_coef" for i in feature_labels]
+        else:
+            feature_count = self.model_params["coefficients"].shape[1]
+            labels = [f"coef_{i+1}" for i in range(feature_count)]
+        data_to_save = { }
+        target_count = self.model_params["coefficients"].shape[0]
+        for i in range(target_count):
+            if i == 0:
+                data_to_save["intercept"] = [self.model_params["intercept"][i]]
+            else:
+                data_to_save[f"target_{i}"].append(self.model_params["intercept"][i])
+            
+            for j in range(feature_count):
+                if i == 0:
+                    data_to_save[labels[j]] = [self.model_params["coefficients"][i, j]]
+                else:
+                    data_to_save[labels[j]].append(self.model_params["coefficients"][i, j])
+
+        df = pd.DataFrame(data_to_save)
+        return [save_dir, {"linear_regression": df}]
 
 
     def compute(self):

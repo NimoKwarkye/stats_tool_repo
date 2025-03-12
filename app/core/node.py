@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-
+import os
+import pandas as pd
 from app.core.port import Port, PortType
 
 
@@ -35,6 +36,16 @@ class Node(ABC):
         self.output_ports.append(port)
         return port.port_id
     
+    def save_node_results(self, out_dir:str):
+        dir_name, data = self.pre_save()
+        if data is not None:
+            save_dir = os.path.join(out_dir, dir_name)
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+            for key, value in data.items():
+                file_name = os.path.join(save_dir, key + ".csv")
+                value.to_csv(file_name, index=False)
+
     
     def get_input_data(self):
         ret_data = {}
@@ -43,6 +54,12 @@ class Node(ABC):
             if key in port.value:
                 ret_data[port.port_id] = port.value[key]
 
+        return ret_data
+    
+    def get_output_data(self):
+        ret_data = {}
+        for port in self.output_ports:
+            ret_data[port.port_id] = port.value[port.port_id]
         return ret_data
     
     def store_data_in_ports(self, data):
@@ -101,10 +118,27 @@ class Node(ABC):
                 self.input_ports[idx].connection = None
                 return
         raise ValueError(f"Output port '{port_id}' not found in node {self.node_id}.")
+    
+    def get_port_connection(self, port_id):
+        for port in self.input_ports:
+            if port.port_id == port_id:
+                return port.connection
+        raise ValueError(f"Output port '{port_id}' not found in node {self.node_id}.")
+    
+    def compose_dir_name(self, port_id):
+        connected_to = self.get_port_connection(port_id)
+        if connected_to is not None:
+            split_conn = connected_to.split("_")
+            return f"{split_conn[1]}_{split_conn[2]}_{self.node_id}"
+        return self.node_id
 
 
     @abstractmethod
     def compute(self):
         """Execute the node's operation."""
+        pass
+    @abstractmethod
+    def pre_save(self):
+        """Save computed node data."""
         pass
 

@@ -36,6 +36,8 @@ class XYScatterPlotNode(Node):
         self.labels_port_id = self.add_input_port("labels", [PortType.DATASERIESSTRING], "Feature Labels")
         self.target_labels_port_id = self.add_input_port("targetlabels", [PortType.DATASERIESSTRING], "Target Labels")
     
+    def pre_save(self):
+        return "", None
 
     def compute(self):
         print(f"[{self.node_id}] Computing XY Scatter Plot...")
@@ -100,7 +102,8 @@ class HeatMapPlotNode(Node):
         }
         self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, PortType.MODELDATAFRAMEFLOAT], "Feature Data")
     
-    
+    def pre_save(self):
+        return "", None
 
     def compute(self):
         print(f"[{self.node_id}] Computing HeatMap Plot...")
@@ -139,7 +142,8 @@ class PairGridPlotNode(Node):
         self.labels_port_id = self.add_input_port("featurelabels", [PortType.DATASERIESSTRING], "Feature Labels")
         self.target_labels_port_id = self.add_input_port("targetlabels", [PortType.DATASERIESSTRING], "Target Labels")
     
-    
+    def pre_save(self):
+        return "", None
 
     def compute(self):
         print(f"[{self.node_id}] Computing PairGrid Plot...")

@@ -58,6 +58,9 @@ class CSVImportNode(Node):
             self.target_lables_port_id: target_labels.to_numpy() if target_labels is not None else None
         }
     
+
+    def pre_save(self):
+        return "", None
     
     def compute(self):
         print(f"[{self.node_id}] Computing CSV Import...")
@@ -115,6 +118,9 @@ class SQLDBImportNode(Node):
             self.target_labels_port_id: target_labels.to_numpy() if target_labels is not None else None
             }
     
+
+    def pre_save(self):
+        return "", None
     
     def compute(self):
         print(f"[{self.node_id}] Computing SQL DB Import...")

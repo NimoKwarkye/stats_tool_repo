@@ -34,6 +34,7 @@ for key in NODE_CLASS:
     node_factory.register_prototype(key, NODE_CLASS[key](NODE_IDS[key]))
 
 def execute_graph():
+    dpg.disable_item("save_computation")
     if graph_manager.execute():
         try:
             for node_id in graph_manager.nodes.keys():
@@ -52,6 +53,7 @@ def execute_graph():
                 elif node.__class__.__name__ == SMP_LINEAR_REG_DRAG_ID:
                     ui_manager.update_node_ui(node_id)
             logs_handler.add_log("Graph executed successfully.")
+            dpg.enable_item("save_computation")
         except Exception as e:
             logs_handler.add_log(f"Error executing graph: {e}", -1)
         
@@ -103,6 +105,25 @@ def open_jsonfile_dialog_callback(sender, app_data, user_data):
     else:
         logs_handler.add_log(f"File: {selected_file} not found.", -1)
 
+def open_folder_dialog_callback(sender, app_data, user_data):
+    selected_folder = app_data["file_path_name"]
+    if len(selected_folder) == 0:
+        logs_handler.add_log("No folder selected.", 1)
+        return
+    if os.path.exists(selected_folder):
+        for node_id in graph_manager.nodes.keys():
+            node:Node = graph_manager.get_node(node_id)
+            node.save_node_results(selected_folder)
+        logs_handler.add_log(f"Saved Computed Data in: {selected_folder}")
+
+def open_folder_dialog(tag:str, user_data:str, callback, label="Select Folder"):
+    with dpg.file_dialog(
+                         label=label, directory_selector=True, show=False, 
+                         tag=f"{OPENFILE_DIALOG_TAG}_{tag}", width=520 ,
+                         height=400, modal=True, user_data=user_data,
+                         callback=callback):
+        pass
+
 def open_file_dialog(tag:str, user_data:str, callback, label="Open File"):
     with dpg.file_dialog(
                          label=label, directory_selector=False, show=False, 
@@ -117,7 +138,7 @@ def open_file_dialog(tag:str, user_data:str, callback, label="Open File"):
 
 
 def add_node_callback(sender, app_data, user_data):
-
+    dpg.disable_item("save_computation")
     pos = get_relative_mouse_pos(REF_NODE_TAG)
     node = node_factory.create_node(app_data, pos)
     graph_manager.add_node(node)
@@ -159,6 +180,7 @@ def link_callback(sender, app_data):
 
 
 def delete_node(node_id:str, node_index:int):
+    dpg.disable_item("save_computation")
     ui_manager.remove_node_ui(node_id)
     node_factory.delete_node(node_id.split("_")[0], node_index)
     graph_manager.remove_node(node_id)
@@ -173,15 +195,20 @@ def save_graph_callback():
         dpg.show_item(f"{OPENFILE_DIALOG_TAG}_json_save")    
         logs_handler.add_log("Saving Graph....")
 
+def folder_dialog_callback():
+    if dpg.does_item_exist(f"{OPENFILE_DIALOG_TAG}_select_folder"):
+        dpg.show_item(f"{OPENFILE_DIALOG_TAG}_select_folder")
+
 def load_graph_callback():
     if dpg.does_item_exist(f"{OPENFILE_DIALOG_TAG}_json_open"):
+        dpg.disable_item("save_computation")
         dpg.show_item(f"{OPENFILE_DIALOG_TAG}_json_open")
         
 
 
 def delete_selected_nodes(sender, app_data, user_data):
+    dpg.disable_item("save_computation")
     selected_nodes = dpg.get_selected_nodes(user_data)
-    print(selected_nodes, app_data, sender, user_data)
     for item_id in selected_nodes:
         node_user_data = dpg.get_item_user_data(item_id)
         node_index = int(node_user_data[0].split("_")[-1])
@@ -199,6 +226,7 @@ def setup_ui():
         # -------------------------
     open_file_dialog("json_save", [], save_jsonfile_dialog_callback, "Save Graph As")
     open_file_dialog("json_open", [], open_jsonfile_dialog_callback, "Open Saved Graph")
+    open_folder_dialog("select_folder", [], open_folder_dialog_callback, "Select Folder")
     with dpg.window(tag=LOG_WINDOW_TAG, 
                     label="Logs", 
                     no_close=True, 
@@ -235,6 +263,9 @@ def setup_ui():
                         dpg.add_button(label="execute graph", callback=lambda: execute_graph())
                         dpg.add_button(label="save graph", callback= lambda : save_graph_callback())
                         dpg.add_button(label="load graph", callback= lambda : load_graph_callback())
+                        dpg.add_button(label="save computation", enabled=False, tag="save_computation", 
+                                       callback= lambda : folder_dialog_callback())
+
                     with dpg.node_editor(tag=NODE_EDITOR_TAG, 
                                         callback=link_callback, 
                                         delink_callback=delink_callback,

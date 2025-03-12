@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from app.core.node import Node
 from sklearn.decomposition import PCA, NMF
 from app.core.port import PortType
@@ -18,12 +19,45 @@ class PCANode(Node):
             "n_over_samples": 10,
         }
         self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, PortType.MODELDATAFRAMEFLOAT], "Feature Data")
-        self.fit_data_port_id = self.add_output_port("fitdata_components", PortType.MODELDATAFRAMEFLOAT, "PCA Components")
-        self.loadings_port_id = self.add_output_port("fitdata_loadings", PortType.MODELDATAFRAMEFLOAT, "PCA Loadings")
+        self.feature_labels_port_id = self.add_input_port("featurelabels", [PortType.DATASERIESSTRING], "Feature Labels")
+        self.fit_data_port_id = self.add_output_port("fitdatacomponents", PortType.MODELDATAFRAMEFLOAT, "PCA Components")
+        self.loadings_port_id = self.add_output_port("fitdataloadings", PortType.MODELDATAFRAMEFLOAT, "PCA Loadings")
         self.explained_variance_port_id = self.add_output_port("fitdata_expl", PortType.MODELSERIESFLOAT, 
                                                                "Explained Variance")
         self.pca_component_names = self.add_output_port("pca_component_names", PortType.DATASERIESSTRING,
                                                         "PCA Component Labels")
+
+    def pre_save(self):
+        data = self.get_output_data()
+        explained_variance = data.get(self.explained_variance_port_id)
+        pca_component_names = data.get(self.pca_component_names)
+        save_dir = self.compose_dir_name(self.feature_port_id)
+        explained_variance_dct = {
+            "principal_components": pca_component_names,
+            "explained_variance": explained_variance
+                                  }
+        explained_variance_df = pd.DataFrame(explained_variance_dct)
+        pca_components = data.get(self.fit_data_port_id)
+        pca_cmp_dict = {}
+        for i, name in enumerate(pca_component_names):
+            pca_cmp_dict[name] = pca_components[:, i]
+        pca_cmp_df = pd.DataFrame(pca_cmp_dict)
+
+        input_data = self.get_input_data()
+        labels = input_data.get(self.feature_labels_port_id)
+        pca_loadings = data.get(self.loadings_port_id)
+        if labels is None:
+            labels = ["Feature " + str(i) for i in range(pca_loadings.shape[0])]
+        pca_loadings_dict = {
+            "feature_labels": labels
+        }
+        for i, name in enumerate(pca_component_names):
+            pca_loadings_dict[name] = pca_loadings[:, i]
+        pca_loadings_df = pd.DataFrame(pca_loadings_dict)
+        
+        return save_dir, {"explained_variance": explained_variance_df, "pca_components": pca_cmp_df,
+                              "pca_loadings": pca_loadings_df}
+
 
     def compute(self):
         print(f"[{self.node_id}] Computing PCA...")
@@ -84,10 +118,31 @@ class NMFNode(Node):
             "random_state": None,
         }
         self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, PortType.MODELDATAFRAMEFLOAT], "Feature Data")
-        self.fit_data_port_id = self.add_output_port("fitdata_components", PortType.MODELDATAFRAMEFLOAT, "NMF Components")
-        self.loadings_port_id = self.add_output_port("fitdata_loadings", PortType.MODELDATAFRAMEFLOAT, "NMF Loadings")
-        self.labels_port_id = self.add_output_port("fitdata_labels", PortType.DATASERIESSTRING, "Component Labels")
+        self.feature_labels_port_id = self.add_input_port("featurelabels", [PortType.DATASERIESSTRING], "Feature Labels")
+        self.fit_data_port_id = self.add_output_port("fitdatacomponents", PortType.MODELDATAFRAMEFLOAT, "NMF Components")
+        self.loadings_port_id = self.add_output_port("fitdataloadings", PortType.MODELDATAFRAMEFLOAT, "NMF Loadings")
+        self.labels_port_id = self.add_output_port("fitdatalabels", PortType.DATASERIESSTRING, "Component Labels")
     
+    def pre_save(self):
+        data = self.get_output_data()
+        input_data = self.get_input_data()
+        save_dir = self.compose_dir_name(self.feature_port_id)
+        labels = input_data.get(self.feature_labels_port_id)
+            
+        nmf_components = data.get(self.fit_data_port_id)
+        nmf_labels = data.get(self.labels_port_id)
+        nmf_loadings = data.get(self.loadings_port_id)
+        if labels is None:
+            labels = ["Feature " + str(i) for i in range(nmf_loadings.shape[0])]
+        nmf_loadings_dict = {"feature_labels": labels}
+        for i, name in enumerate(nmf_labels):
+            nmf_loadings_dict[name] = nmf_loadings[:, i]
+        nmf_loadings_df = pd.DataFrame(nmf_loadings_dict)
+        nmf_components_dict = {}
+        for i, name in enumerate(nmf_labels):
+            nmf_components_dict[name] = nmf_components[:, i]
+        nmf_components_df = pd.DataFrame(nmf_components_dict)
+        return save_dir, {"nmf_loadings": nmf_loadings_df, "nmf_components": nmf_components_df}
 
     def compute(self):
         print(f"[{self.node_id}] Computing NMF...")
