@@ -92,7 +92,7 @@ class ScatterPlot(BasePlot):
                     y_values = [y_data[i] for i in indices]
                     x_values = [plot_data["x"][i] for i in indices]
                     
-                    data_dict[label] = [ x_values, y_values]
+                    data_dict[f"{label}"] = [ x_values, y_values]
             else:
                 data_dict[plot_data["plot_label"][0]] = [plot_data["x"], y_data]
                 
@@ -131,7 +131,7 @@ class ScatterPlot(BasePlot):
                     indices = [i for i, l in enumerate(plot_data["target_label"]) if l == label]
                     y_values = plot_data["y"][indices, :]
                     x_values = [plot_data["x"][i] for i in indices]
-                    data_dict[label] = [x_values, y_values]
+                    data_dict[f"{label}"] = [x_values, y_values]
             else:
                 for i in range(features):
                     data_dict[plot_data["plot_label"][i]] = [plot_data["x"], plot_data["y"][:, i]]
@@ -215,7 +215,11 @@ class PairGridPlot(BasePlot):
             labels = plot_data["labels"]
         
         self.clear_plot_region(node_params["region"])
-        with dpg.subplots(rows=n_features, columns=n_features, parent=node_params["region"], height=-1, width=-1):
+        with dpg.subplots(label=f"{node_params['title']}",
+                        rows=n_features, 
+                          columns=n_features, 
+                          parent=node_params["region"], 
+                          height=-1, width=-1):
             for i in range(n_features):
                 for j in range(n_features):
                     cell_tag = f"pairgrid_{i}_{j}_{dpg.generate_uuid()}"
@@ -236,7 +240,7 @@ class PairGridPlot(BasePlot):
                                     x = data[indices, j].tolist()
                                     y = data[indices, i].tolist()
                                     this_plot_tag = cell_tag + f"scatter_{label}_{idx}"
-                                    dpg.add_scatter_series(x, y, label=label, parent=y_axis_tag, tag=this_plot_tag)
+                                    dpg.add_scatter_series(x, y, label=f"{label}", parent=y_axis_tag, tag=this_plot_tag)
                                     this_plot_theme = cell_tag + f"_theme_{label}_{idx}"
                                     self.create_scatter_theme(this_plot_theme, self.colors[idx%30])
                                     dpg.bind_item_theme(this_plot_tag, this_plot_theme)

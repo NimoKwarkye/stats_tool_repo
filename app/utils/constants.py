@@ -29,6 +29,7 @@ NMF_DRAG_ID = "NMFNode"
 PAIR_GRID_PLOT_DRAG_ID = "PairGridPlotNode"
 KMEANS_DRAG_ID = "KMeansNode"
 DBSCAN_DRAG_ID = "DBSCANNode"
+LOGISTIC_REG_DRAG_ID = "LogisticRegressionNode"
 
 # Other tags
 POP_UP_TAG = "pop_up"

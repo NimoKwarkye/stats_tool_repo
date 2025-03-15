@@ -25,16 +25,18 @@ class XYScatterPlotNode(Node):
             "plot_label": None,
             "target_label": None,
         }
-        self.xaxisdata_port_id = self.add_input_port("xaxisdata", [PortType.DATASERIESFLOAT], "X Data")
+        self.xaxisdata_port_id = self.add_input_port("xaxisdata", 
+                                                     [PortType.DATASERIESFLOAT], 
+                                                     "X Data")
         self.targetdata_port_id = self.add_input_port("targetdata", 
                                                       [PortType.DATASERIESFLOAT, 
                                                        PortType.DATAFRAMEFLOAT, 
                                                        PortType.MODELDATAFRAMEFLOAT,
                                                        PortType.MODELSERIESFLOAT], 
-                                                       "Y Data")
+                                                       "Y Data", True)
         self.fitdata_port_id = self.add_input_port("fitdata", [PortType.MODELSERIESFLOAT], "Fit Line")
-        self.labels_port_id = self.add_input_port("labels", [PortType.DATASERIESSTRING], "Feature Labels")
-        self.target_labels_port_id = self.add_input_port("targetlabels", [PortType.DATASERIESSTRING], "Target Labels")
+        self.labels_port_id = self.add_input_port("labels", [PortType.FEATURELABELSSTRING], "Feature Labels")
+        self.target_labels_port_id = self.add_input_port("targetlabels", [PortType.TARGETLABELSSTRING], "Target Labels")
     
     def pre_save(self):
         return "", None
@@ -100,7 +102,10 @@ class HeatMapPlotNode(Node):
             "cols": None, 
             "scale_min": None,
         }
-        self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, PortType.MODELDATAFRAMEFLOAT], "Feature Data")
+        self.feature_port_id = self.add_input_port("featuredata", 
+                                                   [PortType.DATAFRAMEFLOAT, 
+                                                    PortType.MODELDATAFRAMEFLOAT], 
+                                                    "Feature Data", True)
     
     def pre_save(self):
         return "", None
@@ -138,9 +143,12 @@ class PairGridPlotNode(Node):
             "labels": None,
             "target_label": None,
         }
-        self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, PortType.MODELDATAFRAMEFLOAT], "Feature Data")
-        self.labels_port_id = self.add_input_port("featurelabels", [PortType.DATASERIESSTRING], "Feature Labels")
-        self.target_labels_port_id = self.add_input_port("targetlabels", [PortType.DATASERIESSTRING], "Target Labels")
+        self.feature_port_id = self.add_input_port("featuredata", 
+                                                   [PortType.DATAFRAMEFLOAT, 
+                                                    PortType.MODELDATAFRAMEFLOAT], 
+                                                    "Feature Data", True)
+        self.labels_port_id = self.add_input_port("featurelabels", [PortType.FEATURELABELSSTRING], "Feature Labels")
+        self.target_labels_port_id = self.add_input_port("targetlabels", [PortType.TARGETLABELSSTRING], "Target Labels")
     
     def pre_save(self):
         return "", None

@@ -19,12 +19,12 @@ class PCANode(Node):
             "n_over_samples": 10,
         }
         self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, PortType.MODELDATAFRAMEFLOAT], "Feature Data")
-        self.feature_labels_port_id = self.add_input_port("featurelabels", [PortType.DATASERIESSTRING], "Feature Labels")
+        self.feature_labels_port_id = self.add_input_port("featurelabels", [PortType.FEATURELABELSSTRING], "Feature Labels")
         self.fit_data_port_id = self.add_output_port("fitdatacomponents", PortType.MODELDATAFRAMEFLOAT, "PCA Components")
         self.loadings_port_id = self.add_output_port("fitdataloadings", PortType.MODELDATAFRAMEFLOAT, "PCA Loadings")
         self.explained_variance_port_id = self.add_output_port("fitdata_expl", PortType.MODELSERIESFLOAT, 
                                                                "Explained Variance")
-        self.pca_component_names = self.add_output_port("pca_component_names", PortType.DATASERIESSTRING,
+        self.pca_component_names = self.add_output_port("pca_component_names", PortType.FEATURELABELSSTRING,
                                                         "PCA Component Labels")
 
     def pre_save(self):
@@ -118,10 +118,10 @@ class NMFNode(Node):
             "random_state": None,
         }
         self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, PortType.MODELDATAFRAMEFLOAT], "Feature Data")
-        self.feature_labels_port_id = self.add_input_port("featurelabels", [PortType.DATASERIESSTRING], "Feature Labels")
+        self.feature_labels_port_id = self.add_input_port("featurelabels", [PortType.FEATURELABELSSTRING], "Feature Labels")
         self.fit_data_port_id = self.add_output_port("fitdatacomponents", PortType.MODELDATAFRAMEFLOAT, "NMF Components")
         self.loadings_port_id = self.add_output_port("fitdataloadings", PortType.MODELDATAFRAMEFLOAT, "NMF Loadings")
-        self.labels_port_id = self.add_output_port("fitdatalabels", PortType.DATASERIESSTRING, "Component Labels")
+        self.labels_port_id = self.add_output_port("fitdatalabels", PortType.FEATURELABELSSTRING, "Component Labels")
     
     def pre_save(self):
         data = self.get_output_data()

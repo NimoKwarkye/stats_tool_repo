@@ -15,8 +15,14 @@ class SimpleLinearRegressionNode(Node):
             "degree": 1,      # Currently fixed to 1 (simple linear regression)
             "r2_score": 0,
         }
-        self.feature_port_id = self.add_input_port("featuredata", [PortType.DATASERIESFLOAT, PortType.MODELSERIESFLOAT], "X Data")
-        self.target_data_port_id = self.add_input_port("targetdata", [PortType.DATASERIESFLOAT, PortType.MODELSERIESFLOAT], "Y Data")
+        self.feature_port_id = self.add_input_port("featuredata", 
+                                                   [PortType.DATASERIESFLOAT, 
+                                                    PortType.MODELSERIESFLOAT], 
+                                                    "X Data", True)
+        self.target_data_port_id = self.add_input_port("targetdata", 
+                                                       [PortType.DATASERIESFLOAT, 
+                                                        PortType.MODELSERIESFLOAT], 
+                                                        "Y Data", True)
         self.fit_port_id = self.add_output_port("fitdata", PortType.MODELSERIESFLOAT, "Fit Line")
 
     def pre_save(self):
@@ -78,10 +84,15 @@ class LinearRegressionNode(Node):
             "coefficients": None,
             "intercept": None,
         }
-        self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, PortType.MODELDATAFRAMEFLOAT], "Feature Data")
-        self.feature_labels_port_id = self.add_input_port("featurelabels", [PortType.DATASERIESSTRING], "Feature Labels")
-        self.target_data_port_id = self.add_input_port("targetdata", [PortType.DATASERIESFLOAT, 
-                                                                      PortType.MODELSERIESFLOAT], "Target Data")
+        self.feature_port_id = self.add_input_port("featuredata", 
+                                                   [PortType.DATAFRAMEFLOAT, 
+                                                    PortType.MODELDATAFRAMEFLOAT], 
+                                                    "Feature Data", True)
+        self.feature_labels_port_id = self.add_input_port("featurelabels", [PortType.FEATURELABELSSTRING], "Feature Labels")
+        self.target_data_port_id = self.add_input_port("targetdata", 
+                                                       [PortType.DATASERIESFLOAT, 
+                                                        PortType.MODELSERIESFLOAT], 
+                                                        "Target Data", True)
         
         self.xaxis_port_id = self.add_input_port("xaxisdata", [PortType.DATASERIESFLOAT, PortType.MODELSERIESFLOAT], "X-axis Data")
         self.fit_port_id = self.add_output_port("fitdata", PortType.MODELSERIESFLOAT, "Fit Line")

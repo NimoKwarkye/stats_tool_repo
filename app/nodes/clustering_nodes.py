@@ -19,11 +19,14 @@ class KMeansNode(Node):
             "copy_x": True,
             "algorithm": "lloyd",
         }
-        self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, PortType.MODELDATAFRAMEFLOAT], "Feature Data")
-        self.feature_labels_port_id = self.add_input_port("featurelabels", [PortType.DATASERIESSTRING], "Feature Labels")
+        self.feature_port_id = self.add_input_port("featuredata", 
+                                                   [PortType.DATAFRAMEFLOAT, 
+                                                    PortType.MODELDATAFRAMEFLOAT], 
+                                                    "Feature Data", True)
+        self.feature_labels_port_id = self.add_input_port("featurelabels", [PortType.FEATURELABELSSTRING], "Feature Labels")
         self.fit_data_port_id = self.add_output_port("kmeansfitdata", PortType.MODELDATAFRAMEFLOAT, "KMeans Fit Data")
         self.fit_centroid_port_id = self.add_output_port("kmeanscentroiddata", PortType.MODELDATAFRAMEFLOAT, "KMeans Centroids")
-        self.cluster_labels_port_id = self.add_output_port("kmeansclusterlabels", PortType.DATASERIESSTRING, "Cluster Labels")
+        self.cluster_labels_port_id = self.add_output_port("kmeansclusterlabels", PortType.TARGETLABELSSTRING, "Cluster Labels")
     
     def pre_save(self):
         data = self.get_output_data()
@@ -102,10 +105,13 @@ class DBSCANNode(Node):
             "leaf_size": 30,
             "n_jobs": None,
         }
-        self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, PortType.MODELDATAFRAMEFLOAT], "Feature Data")
+        self.feature_port_id = self.add_input_port("featuredata", 
+                                                   [PortType.DATAFRAMEFLOAT, 
+                                                    PortType.MODELDATAFRAMEFLOAT], 
+                                                    "Feature Data", True)
         self.feature_labels_port_id = self.add_input_port("featurelables", [PortType.DATASERIESFLOAT], "Feature Labels")
         self.fit_data_port_id = self.add_output_port("dbscanfitdata", PortType.MODELDATAFRAMEFLOAT, "DBSCAN Fit Data")
-        self.cluster_labels_port_id = self.add_output_port("dbscanclusterlabels", PortType.DATASERIESSTRING, "Cluster Labels")
+        self.cluster_labels_port_id = self.add_output_port("dbscanclusterlabels", PortType.TARGETLABELSSTRING, "Cluster Labels")
 
 
     def pre_save(self):

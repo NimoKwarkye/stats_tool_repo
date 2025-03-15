@@ -21,8 +21,8 @@ class CSVImportNode(Node):
         self.feature_port_id = self.add_output_port("featuredata", PortType.DATAFRAMEFLOAT, "Feature Data")
         self.xaxis_port_id = self.add_output_port("xaxisdata", PortType.DATASERIESFLOAT, "X-axis Data")
         self.target_data_port_id = self.add_output_port("targetdata", PortType.DATASERIESFLOAT, "Target Data")
-        self.labels_port_id = self.add_output_port("featurelabels", PortType.DATASERIESSTRING, "Feature Labels")
-        self.target_lables_port_id = self.add_output_port("targetlabels", PortType.DATASERIESSTRING, "Target Labels")
+        self.labels_port_id = self.add_output_port("featurelabels", PortType.FEATURELABELSSTRING, "Feature Labels")
+        self.target_lables_port_id = self.add_output_port("targetlabels", PortType.TARGETLABELSSTRING, "Target Labels")
     
     def load_csv_data(self):
         filepath = self.params.get("filepath")
@@ -82,8 +82,8 @@ class SQLDBImportNode(Node):
         self.feature_port_id = self.add_output_port("featuredata", PortType.DATAFRAMEFLOAT, "Feature Data")
         self.xaxis_port_id = self.add_output_port("xaxisdata", PortType.DATASERIESFLOAT, "X-axis Data")
         self.target_data_port_id = self.add_output_port("targetdata", PortType.DATASERIESFLOAT, "Target Data")
-        self.labels_port_id = self.add_output_port("featurelabels", PortType.DATASERIESSTRING, "Feature Labels")
-        self.target_labels_port_id = self.add_output_port("targetlabels", PortType.DATASERIESSTRING, "Target Labels")
+        self.labels_port_id = self.add_output_port("featurelabels", PortType.FEATURELABELSSTRING, "Feature Labels")
+        self.target_labels_port_id = self.add_output_port("targetlabels", PortType.TARGETLABELSSTRING, "Target Labels")
     
     def load_sql_data(self):
         connection_string = self.params.get("connection_string")

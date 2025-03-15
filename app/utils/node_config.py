@@ -10,12 +10,14 @@ from app.nodes.data_plots_nodes import HeatMapPlotNode, XYScatterPlotNode, PairG
 from app.nodes.decomposition_nodes import PCANode, NMFNode
 from app.nodes.clustering_nodes import KMeansNode, DBSCANNode
 from app.ui.clustering_nodeui import KmeansNodeUI, DBSCANNodeUI
+from app.nodes.classification_nodes import LogisticRegressionNode
+from app.ui.classification_nodeui import LogisticRegressionNodeUI
 from app.utils.constants import EDITOR_TAG, FUNCTIONS_PANEL_TAG, NODE_EDITOR_PANEL_TAG, \
                                 NODE_EDITOR_TAG, OPENFILE_DIALOG_TAG, REF_NODE_TAG, CSVIMPORT_DRAG_ID, \
                                 LINEAR_REG_DRAG_ID, SCATTER_PLOT_DRAG_ID,  LOG_WINDOW_TAG, \
                                 SQLDB_IMPORT_DRAG_ID, HEATMAP_PLOT_DRAG_ID, SMP_LINEAR_REG_DRAG_ID, \
                                 PCA_DRAG_ID, PAIR_GRID_PLOT_DRAG_ID, NMF_DRAG_ID, KMEANS_DRAG_ID, \
-                                DBSCAN_DRAG_ID 
+                                DBSCAN_DRAG_ID, LOGISTIC_REG_DRAG_ID 
 
 NODE_CONFIG = {
     "CSVImportNode": {
@@ -116,5 +118,14 @@ NODE_CONFIG = {
         "drag_btn_name": "DBSCAN Clustering",
         "prototype_id": f"proto_dbscan_{dpg.generate_uuid()}",
         "category": "Clustering"
-        }
+        },
+    "LogisticRegressionNode": {
+        "drag_id": LOGISTIC_REG_DRAG_ID,
+        "ui_class": LogisticRegressionNodeUI,
+        "node_class": LogisticRegressionNode,
+        "drag_text": "Add a Logistic Regression Node",
+        "drag_btn_name": "Logistic Regression",
+        "prototype_id": f"proto_logreg_{dpg.generate_uuid()}",
+        "category": "Classification"
+    }
 }
