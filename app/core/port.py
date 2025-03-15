@@ -20,6 +20,7 @@ class Port:
         self.value = {}
         self.port_open = True
         self.port_index = port_index
+        self.node_id = node_id
         self.port_id = f"{name}_{node_id}_{direction}put_{port_index}"
         self.connection = None
     

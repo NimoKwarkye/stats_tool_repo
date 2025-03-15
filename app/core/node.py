@@ -20,6 +20,7 @@ class Node(ABC):
         return new_node
     
     def add_input_port(self, name:str, port_type:list[PortType], port_alias=""):
+        name = name.replace("_", "")
         if len(port_alias) == 0:
             port_alias = name
         port_index = len(self.input_ports)
@@ -29,6 +30,7 @@ class Node(ABC):
 
 
     def add_output_port(self, name:str, port_type:PortType, port_alias=""):
+        name = name.replace("_", "")
         if len(port_alias) == 0:
             port_alias = name
         port_index = len(self.output_ports)

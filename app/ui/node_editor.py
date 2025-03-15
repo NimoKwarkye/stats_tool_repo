@@ -27,6 +27,7 @@ ui_manager = NodeUIManager(NODE_UI_MAPPING)
 graph_manager = GraphManager()
 node_factory = NodeFactory()
 logs_handler: LogHandler = LogHandler()
+selected_nodes = []
 
 plot_area : PlotArea = PlotArea()
 
@@ -137,6 +138,57 @@ def open_file_dialog(tag:str, user_data:str, callback, label="Open File"):
         dpg.add_file_extension(".json", color=(255, 255, 55, 255), custom_text="[JSON]")
 
 
+def create_nodes_copy(node_ids:list[str]):
+    dpg.disable_item("save_computation")
+    created_nodes = {}
+    mouse_pos = get_relative_mouse_pos(REF_NODE_TAG)
+    def get_new_pos(m_pos, n_pos):
+        
+        new_x = m_pos[0] - n_pos[0]
+        new_y = m_pos[1] - n_pos[1]
+        return [new_x, new_y]
+    off_set = [0, 0]
+    for node_id in node_ids:
+        node : Node = graph_manager.get_node(node_id)
+        if created_nodes.__len__() == 0:
+            off_set = get_new_pos(mouse_pos, node.position)
+        if not node_id in created_nodes:
+            ui_manager.set_current_pos(node_id)
+            new_pos = [node.position[0] + off_set[0], node.position[1] + off_set[1]]
+            new_node : Node = node_factory.create_node(node.__class__.__name__, new_pos)
+            new_node.params.update(node.params)
+            graph_manager.add_node(new_node)
+            ui_manager.create_node_ui(new_node)
+            ui_manager.update_node_ui(new_node.node_id)
+
+            created_nodes[node_id] = new_node
+        
+        for port in node.input_ports:
+            if port.connection is not None:
+                id_split = port.connection.split("_")
+                con_node_id = f'{id_split[1]}_{id_split[2]}'
+                if con_node_id in node_ids:
+                    con_node = graph_manager.get_node(con_node_id)
+                    if not con_node_id in created_nodes:
+                        ui_manager.set_current_pos(con_node_id)
+                        new_pos = [con_node.position[0] + off_set[0], con_node.position[1] + off_set[1]]
+                        new_con_node = node_factory.create_node(con_node.__class__.__name__, new_pos)
+                        new_con_node.params.update(con_node.params)
+                        graph_manager.add_node(new_con_node)
+                        ui_manager.create_node_ui(new_con_node)
+                        ui_manager.update_node_ui(new_con_node.node_id)
+                        created_nodes[con_node_id] = new_con_node
+                    
+                    con_port_index = con_node.get_output_port_index(port.connection)
+                    new_source_id = created_nodes[con_node_id].node_id
+                    new_source_port_id = created_nodes[con_node_id].output_ports[con_port_index].port_id
+                    new_target_id = created_nodes[node_id].node_id
+                    new_target_port_id = created_nodes[node_id].input_ports[port.port_index].port_id
+
+                    graph_manager.connect(new_source_id, new_source_port_id, new_target_id, new_target_port_id)
+                    reconnect_loaded_nodes(new_source_id, new_target_id, new_source_port_id, new_target_port_id)
+        
+
 def add_node_callback(sender, app_data, user_data):
     dpg.disable_item("save_computation")
     pos = get_relative_mouse_pos(REF_NODE_TAG)
@@ -205,6 +257,17 @@ def load_graph_callback():
         dpg.show_item(f"{OPENFILE_DIALOG_TAG}_json_open")
         
 
+def paste_callback(sender, app_data, user_data):
+    if dpg.is_item_hovered(NODE_EDITOR_TAG) and selected_nodes.__len__() > 0:
+        create_nodes_copy(selected_nodes)
+    selected_nodes.clear()
+
+def copy_callback(sender, app_data, user_data):
+    sel_nodes = dpg.get_selected_nodes(NODE_EDITOR_TAG)
+    global selected_nodes
+    selected_nodes = [dpg.get_item_user_data(node_id)[0] for node_id in sel_nodes]
+
+
 
 def delete_selected_nodes(sender, app_data, user_data):
     dpg.disable_item("save_computation")
@@ -219,6 +282,8 @@ def setup_ui():
         dpg.add_key_press_handler(dpg.mvKey_Delete, 
                                     callback=delete_selected_nodes, 
                                     user_data=NODE_EDITOR_TAG)
+        dpg.add_key_press_handler(callback=copy_callback, key=dpg.mvKey_C)
+        dpg.add_key_press_handler(callback=paste_callback, key=dpg.mvKey_V)
     
     plot_area.plot_setup()  
         # -------------------------
