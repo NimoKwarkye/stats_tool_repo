@@ -31,6 +31,13 @@ KMEANS_DRAG_ID = "KMeansNode"
 DBSCAN_DRAG_ID = "DBSCANNode"
 LOGISTIC_REG_DRAG_ID = "LogisticRegressionNode"
 
+
+MATERIAL_DARK_THEME = "material_dark_theme"
+MATERIAL_LIGHT_THEME = "material_light_theme"
+GITHUB_LIGHT_THEME = "github_light_theme"
+DPG_DARK_THEME = "dpg_dark_theme"
+DPG_LIGHT_THEME = "dpg_light_theme"
+
 # Other tags
 POP_UP_TAG = "pop_up"
 CSV_RADIO_TAG = "csv_radio"

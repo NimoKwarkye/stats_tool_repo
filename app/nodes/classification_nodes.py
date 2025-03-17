@@ -3,6 +3,7 @@ import pandas as pd
 from app.core.node import Node
 from app.core.port import PortType
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
 
 
 class LogisticRegressionNode(Node):
@@ -10,6 +11,7 @@ class LogisticRegressionNode(Node):
         super().__init__(node_index, name)
         self.params = {
             "penalty": "l2",
+            "test_size": 0.3,
             "dual": False,
             "tol": 1e-4,
             "C": 1.0,
@@ -78,7 +80,6 @@ class LogisticRegressionNode(Node):
   
 
     def compute(self):
-        print(f"[{self.node_id}] Computing Logistic Regression...")
         ret_data = self.get_input_data()
         feature_data = ret_data.get(self.feature_port_id)
         target_data = ret_data.get(self.target_port_id)
@@ -102,8 +103,24 @@ class LogisticRegressionNode(Node):
                 n_jobs=self.params["n_jobs"],
                 l1_ratio=self.params["l1_ratio"],
             )
-            lgr = lgr.fit(feature_data, target_data, sample_weight_data)
+            X_train, X_test, y_train, y_test, weight_train, weight_test = None, None, None, None, None, None
+            if sample_weight_data is None:
+                X_train, X_test, y_train, y_test = train_test_split(
+                    feature_data, target_data, test_size=self.params["test_size"],
+                    random_state=42
+                    )
+            else:
+                X_train, X_test, y_train, y_test, weight_train, weight_test = train_test_split(
+                feature_data, target_data, sample_weight_data, test_size=self.params["test_size"])
+            
+
+
+            lgr = lgr.fit(X_train, y_train, weight_train)
             classes = lgr.predict(feature_data)
+            train_score = lgr.score(X_train, y_train, weight_train)
+            test_score = lgr.score(X_test, y_test, weight_test)
+            unique_classes = np.unique(classes)
+            return_log = f"Train Score: {train_score}\nTest Score: {test_score}\nclasses: {unique_classes.tolist()}\niterations: {lgr.n_iter_}"
             self.params["score"] = lgr.score(feature_data, target_data, sample_weight_data)
 
             intercept = lgr.intercept_
@@ -120,7 +137,7 @@ class LogisticRegressionNode(Node):
                 self.model_port_id: lgr,
             }
             self.store_data_in_ports(output_data)
-            return True
+            return return_log
         
         except Exception as e:
             raise RuntimeError(f"[{self.node_id}] Error during computation: {e}")

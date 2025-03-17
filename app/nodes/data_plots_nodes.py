@@ -78,7 +78,7 @@ class XYScatterPlotNode(Node):
             self.plot_data["trend_line"] = []
         
         self.has_data = True
-        return True
+        return f"Plot displayed in {self.params['region']} region."
 
 
 class HeatMapPlotNode(Node):
@@ -126,7 +126,7 @@ class HeatMapPlotNode(Node):
         self.plot_data["scale_min"] = port_data.min()
         self.plot_data["data"] = port_data.flatten().tolist()
         self.has_data = True
-        return True
+        return f"Plot displayed in {self.params['region']} region."
 
 
 class PairGridPlotNode(Node):
@@ -171,4 +171,4 @@ class PairGridPlotNode(Node):
             self.plot_data["labels"] = [f"series {i + 1}" for i in range(feature_data.shape[1])]
         self.plot_data["target_label"] = target_labels
         self.has_data = True
-        return True
+        return f"Plot displayed in {self.params['region']} region."

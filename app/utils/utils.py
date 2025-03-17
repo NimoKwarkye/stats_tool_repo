@@ -1,6 +1,7 @@
 
 import os
 import dearpygui.dearpygui as dpg
+from app.utils import app_themes
 
 from app.utils.constants import FONT_FILE, FONT_SIZE, FONT_TAG
 
@@ -27,4 +28,5 @@ def init():
     load_init_file()
     load_fonts()
     dpg.bind_font(FONT_TAG)
+    app_themes.init()
     #dpg.set_exit_callback(callback=lambda: on_exit())

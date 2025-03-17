@@ -57,7 +57,6 @@ class KMeansNode(Node):
 
 
     def compute(self):
-        print(f"[{self.node_id}] Computing KMeans...")
         feature_data = self.get_input_data().get(self.feature_port_id)
         if feature_data is None:
             raise ValueError(f"[{self.node_id}] Missing input data.")
@@ -81,17 +80,20 @@ class KMeansNode(Node):
             kmeans.fit(feature_data)
             labels = kmeans.predict(feature_data)
             x_transformed = kmeans.transform(feature_data)
-            labels = np.array([f"Cluster {label}" for label in labels])
+
+            return_log = f"inertia: {kmeans.inertia_}\niterations: {kmeans.n_iter_}\nfeatures seen:{kmeans.n_features_in_}\nscore: {kmeans.score(feature_data)}"
+
             output_data ={
                 self.fit_data_port_id: x_transformed,
                 self.fit_centroid_port_id: kmeans.cluster_centers_,
                 self.cluster_labels_port_id: labels,
             }
             self.store_data_in_ports(output_data)
+
+            return return_log
             
         except Exception as e:
             raise ValueError(f"[{self.node_id}] Error computing KMeans: {e}")
-        return True
 
 
 class DBSCANNode(Node):
@@ -129,7 +131,6 @@ class DBSCANNode(Node):
 
 
     def compute(self):
-        print(f"[{self.node_id}] Computing DBSCAN...")
         feature_data = self.get_input_data().get(self.feature_port_id)
         if feature_data is None:
             raise ValueError(f"[{self.node_id}] Missing input data.")
@@ -149,20 +150,14 @@ class DBSCANNode(Node):
             )
             labels = dbscan.fit_predict(feature_data)
             fit_data = dbscan.components_
-            out_labels = []
-            for label in labels:
-                if label == -1:
-                    out_labels.append("Noise")
-                else:
-                    out_labels.append(f"Cluster {label}")
             
-
+            true_labels = [i for i in labels if i >= 0]
+            return_log = f"Number of clusters: {len(np.unique(true_labels))}\nfeatures seen: {dbscan.n_features_in_}"
             output_data ={
                 self.fit_data_port_id: fit_data,
-                self.cluster_labels_port_id: np.array(out_labels),
+                self.cluster_labels_port_id: np.array(labels),
             }
             self.store_data_in_ports(output_data)
-            
+            return return_log
         except Exception as e:
             raise ValueError(f"[{self.node_id}] Error computing DBSCAN: {e}")
-        return True

@@ -224,6 +224,7 @@ class PairGridPlot(BasePlot):
                 for j in range(n_features):
                     cell_tag = f"pairgrid_{i}_{j}_{dpg.generate_uuid()}"
                     with dpg.plot(label="", height=150, width=150, tag=cell_tag):
+                        dpg.add_plot_legend()
                         x_axis_tag = cell_tag + "_x"
                         y_axis_tag = cell_tag + "_y"
                         dpg.add_plot_axis(dpg.mvXAxis, label=labels[j], tag=x_axis_tag)

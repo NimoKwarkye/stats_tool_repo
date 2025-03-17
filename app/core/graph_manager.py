@@ -162,7 +162,9 @@ class GraphManager:
         
         for node in sorted_nodes:
             try:
-                node.compute()
+                node_log = node.compute()
+                if node_log:
+                    self.logs_handler.add_log(f"Computed {node.node_id}\n{node_log}")
             except Exception as e:
                 self.logs_handler.add_log(f"Error executing node {node.node_id}\nmsg: {e}", -1)
                 return False

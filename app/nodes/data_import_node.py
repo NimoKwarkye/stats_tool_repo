@@ -25,6 +25,7 @@ class CSVImportNode(Node):
         self.target_lables_port_id = self.add_output_port("targetlabels", PortType.TARGETLABELSSTRING, "Target Labels")
     
     def load_csv_data(self):
+        return_log = ""
         filepath = self.params.get("filepath")
         if not filepath:
             raise ValueError("CSVImportNode: 'filepath' parameter is not set.")
@@ -33,6 +34,7 @@ class CSVImportNode(Node):
         try:
             headers = "infer" if self.params.get("header") else None
             df = pd.read_csv(filepath, sep=self.params.get("csv_sep"), header=headers)
+            return_log +=  f"{df.describe().to_string()}\n"
             if len(self.params.get("drop_cols")) > 0:
                 df = df.drop(self.params.get("drop_cols"), axis=1)
             target = None
@@ -56,17 +58,16 @@ class CSVImportNode(Node):
             self.feature_port_id: df.to_numpy(),
             self.target_data_port_id: target.to_numpy() if target is not None else None,
             self.target_lables_port_id: target_labels.to_numpy() if target_labels is not None else None
-        }
+        }, return_log
     
 
     def pre_save(self):
         return "", None
     
     def compute(self):
-        print(f"[{self.node_id}] Computing CSV Import...")
-        data = self.load_csv_data()
+        data, return_log = self.load_csv_data()
         self.store_data_in_ports(data)
-        return True
+        return return_log
 
 
 class SQLDBImportNode(Node):
@@ -86,6 +87,7 @@ class SQLDBImportNode(Node):
         self.target_labels_port_id = self.add_output_port("targetlabels", PortType.TARGETLABELSSTRING, "Target Labels")
     
     def load_sql_data(self):
+        return_log =  ""
         connection_string = self.params.get("connection_string")
         data_query = self.params.get("data_query")
         target_query = self.params.get("target_query")
@@ -99,6 +101,7 @@ class SQLDBImportNode(Node):
             engine = create_engine(connection_string)
             with engine.connect() as connection:
                 df = pd.read_sql(data_query, connection, dtype=np.float64)
+                return_log +=  f"{df.describe().to_string()}\n"
                 target = None
                 if target_query:
                     target = pd.read_sql(target_query, connection, dtype=np.float64)
@@ -123,7 +126,6 @@ class SQLDBImportNode(Node):
         return "", None
     
     def compute(self):
-        print(f"[{self.node_id}] Computing SQL DB Import...")
-        data = self.load_sql_data()
+        data, return_log = self.load_sql_data()
         self.store_data_in_ports(data)
-        return True
+        return return_log

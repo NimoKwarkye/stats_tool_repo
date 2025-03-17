@@ -37,7 +37,6 @@ class SimpleLinearRegressionNode(Node):
         return [self.compose_dir_name(self.feature_port_id), {"simple_linear_regression": df}]
 
     def compute(self):
-        print(f"[{self.node_id}] Computing Simple Linear Regression...")
         ret_data = self.get_input_data()
         feature_data = ret_data.get(self.feature_port_id)
         target_data = ret_data.get(self.target_data_port_id)
@@ -65,8 +64,8 @@ class SimpleLinearRegressionNode(Node):
             output_data ={self.fit_port_id: [x.tolist(), fit.tolist()]}
             self.store_data_in_ports(output_data)
 
-            print(f"[{self.node_id}] Computation successful. R²: {self.params['r2_score']:.4f}")
-            return True
+            return_log = f"R² score: {self.params['r2_score']:.4f}\ncoefficients: {slope.tolist()}"
+            return return_log
 
         except Exception as e:
             raise RuntimeError(f"[{self.node_id}] Error during computation: {e}")
@@ -127,7 +126,6 @@ class LinearRegressionNode(Node):
 
 
     def compute(self):
-        print(f"[{self.node_id}] Computing Linear Regression...")
         ret_data = self.get_input_data()
         feature_data = ret_data.get(self.feature_port_id)
         target_data = ret_data.get(self.target_data_port_id)
@@ -148,6 +146,10 @@ class LinearRegressionNode(Node):
             )
             reg_model = LinearRegression(positive=self.params["nng"])
             reg_model.fit(X_train, y_train)
+            train_score = reg_model.score(X_train, y_train)
+            test_score = reg_model.score(X_test, y_test)
+            return_log = f"Train score: {train_score:.4f}\nTest score: {test_score:.4f}\nX rank: {reg_model.rank_}\n\
+                features seen: {reg_model.n_features_in_}"
 
             self.params["r2_score"] = r2_score(y_test, reg_model.predict(X_test))
             self.model_params["coefficients"] = reg_model.coef_
@@ -160,8 +162,7 @@ class LinearRegressionNode(Node):
             output_data = {self.fit_port_id: [x_axis_data.tolist(), fitted_line.tolist()]}
             self.store_data_in_ports(output_data)
 
-            print(f"[{self.node_id}] Computation successful. R²: {self.params['r2_score']:.4f}")
-            return True
+            return return_log
 
         except Exception as e:
             raise RuntimeError(f"[{self.node_id}] Error during computation: {e}")

@@ -15,7 +15,9 @@ class LogisticRegressionNodeUI(BaseNodeUI):
                        parent=self.node_id):
             dpg.add_text("Logistic Regression Node")
             dpg.add_separator()
-            dpg.add_combo(label="penaly", items=["l1", "l2", "elasticnet"],
+            dpg.add_input_float(label="test size", default_value=0.3, tag=f"{self.POP_UP_TAG}_test_size",
+                                 min_value=0.0, max_value=1.0, min_clamped=True, max_clamped=True)
+            dpg.add_combo(label="penalty", items=["l1", "l2", "elasticnet"],
                           default_value="l2", tag=f"{self.POP_UP_TAG}_penalty")
             dpg.add_checkbox(label="dual", default_value=False, tag=f"{self.POP_UP_TAG}_dual")
             dpg.add_input_float(label="tol", default_value=1e-4, tag=f"{self.POP_UP_TAG}_tol")
@@ -43,6 +45,7 @@ class LogisticRegressionNodeUI(BaseNodeUI):
         self.node_instance.params["C"] = dpg.get_value(f"{self.POP_UP_TAG}_C")
         self.node_instance.params["fit_intercept"] = dpg.get_value(f"{self.POP_UP_TAG}_fit_intercept")
         self.node_instance.params["intercept_scaling"] = dpg.get_value(f"{self.POP_UP_TAG}_intercept_scaling")
+        self.node_instance.params["test_size"] = dpg.get_value(f"{self.POP_UP_TAG}_test_size")
 
         cls_wgt = dpg.get_value(f"{self.POP_UP_TAG}_class_weight")
         self.node_instance.params["class_weight"] = None if cls_wgt == "None" else cls_wgt
@@ -66,6 +69,7 @@ class LogisticRegressionNodeUI(BaseNodeUI):
         dpg.set_value(f"{self.POP_UP_TAG}_fit_intercept", self.node_instance.params["fit_intercept"])
         dpg.set_value(f"{self.POP_UP_TAG}_intercept_scaling", self.node_instance.params["intercept_scaling"])
         dpg.set_value(f"{self.POP_UP_TAG}_class_weight", self.node_instance.params["class_weight"])
+        dpg.set_value(f"{self.POP_UP_TAG}_test_size", self.node_instance.params["test_size"])
 
         rnd_state = self.node_instance.params["random_state"]
         dpg.set_value(f"{self.POP_UP_TAG}_random_state", 0 if rnd_state is None else rnd_state)

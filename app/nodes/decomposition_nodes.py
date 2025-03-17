@@ -60,7 +60,6 @@ class PCANode(Node):
 
 
     def compute(self):
-        print(f"[{self.node_id}] Computing PCA...")
         feature_data = self.get_input_data().get(self.feature_port_id)
         
         if feature_data is None:
@@ -87,7 +86,8 @@ class PCANode(Node):
             pca_loadings = pca.components_.T * np.sqrt(pca.explained_variance_)
             pca_explained_variance = pca.explained_variance_ratio_
             pca_component_names = [f"PC{i+1}" for i in range(pca.n_components_)]
-            
+            return_log = f"Explained variance: {pca_explained_variance.sum()}\nscore: {pca.score(feature_data)}\n\
+                noise variance: {pca.noise_variance_}\nfeatures seen: {pca.n_features_in_}"
             output_names = {
                 self.fit_data_port_id: pca_components,
                 self.loadings_port_id: pca_loadings,
@@ -96,7 +96,7 @@ class PCANode(Node):
             }
             self.store_data_in_ports(output_names)
 
-
+            return return_log
         except Exception as e:
             raise ValueError(f"[{self.node_id}] Error computing PCA: {e}")
 
@@ -145,7 +145,6 @@ class NMFNode(Node):
         return save_dir, {"nmf_loadings": nmf_loadings_df, "nmf_components": nmf_components_df}
 
     def compute(self):
-        print(f"[{self.node_id}] Computing NMF...")
         feature_data = self.get_input_data().get(self.feature_port_id)
         if feature_data is None:
             raise ValueError(f"[{self.node_id}] Missing input data.")
@@ -172,16 +171,16 @@ class NMFNode(Node):
             nmf_components = nmf.transform(feature_data)
             nmf_loadings = nmf.components_.transpose()
             nmf_labels = [f"Cmp {i+1}" for i in range(nmf.n_components)]
-
+            return_log = f"Reconstruction error: {nmf.reconstruction_err_}\n\
+                iterations: {nmf.n_iter_}\nfeatures seen: {nmf.n_features_in_}"
             output_names = {
                 self.fit_data_port_id: nmf_components,
                 self.loadings_port_id: nmf_loadings,
                 self.labels_port_id: nmf_labels,
             }
             self.store_data_in_ports(output_names)
-           
+            return return_log
         except Exception as e:
             raise ValueError(f"[{self.node_id}] Error computing NMF: {e}")
 
-        return True
     

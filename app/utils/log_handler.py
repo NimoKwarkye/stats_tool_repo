@@ -51,7 +51,7 @@ class LogHandler:
         if msg_type == 0:
             display_log = f"[{now_str}]->[Task Completed]\n{log}"
             dpg.add_text(display_log, parent=self.log_window_tag, 
-                            tag=log_tag, color=(255, 255, 255, 255), before=before_log)
+                            tag=log_tag,  before=before_log)
         
         elif msg_type > 0:
             display_log = f"[{now_str}]->[Warning]\n{log}"
