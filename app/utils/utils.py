@@ -13,6 +13,10 @@ def absolute_path(relative_path: str) -> str:
 def load_init_file():
     dpg.configure_app(init_file=absolute_path("./config/init.ini"))
 
+
+def get_examples_folder() -> str:
+    return absolute_path("./examples").replace("\\", "/")
+
 def on_exit():
     print("Application is terminating...")
     init_file = absolute_path("./config/dpg.ini").replace("\\", "/")

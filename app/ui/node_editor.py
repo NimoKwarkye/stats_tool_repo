@@ -13,6 +13,7 @@ from app.utils.constants import EDITOR_TAG, FUNCTIONS_PANEL_TAG, NODE_EDITOR_PAN
                                 PCA_DRAG_ID, PAIR_GRID_PLOT_DRAG_ID
 from app.utils.node_config import NODE_CONFIG
 from collections import defaultdict
+from app.utils import utils
 
 
 NODE_UI_MAPPING = { key: config["ui_class"] for key, config in NODE_CONFIG.items() }
@@ -33,6 +34,8 @@ plot_area : PlotArea = PlotArea()
 
 for key in NODE_CLASS:
     node_factory.register_prototype(key, NODE_CLASS[key](NODE_IDS[key]))
+
+examples_folder = utils.get_examples_folder()
 
 def execute_graph():
     dpg.disable_item("save_computation")
@@ -87,6 +90,18 @@ def save_jsonfile_dialog_callback(sender, app_data, user_data):
     graph_manager.save_to_file(selected_file, node_factory)
     logs_handler.add_log("Graph saved successfully.")
 
+def load_graph(graph_file:str):
+    if os.path.exists(graph_file):
+        node_ids = [ky for ky in graph_manager.nodes.keys()]
+        for node_id in node_ids:
+            node = graph_manager.get_node(node_id)
+            delete_node(node.node_id, node.node_index)
+        graph_manager.load_from_file(graph_file, node_factory)
+        create_loaded_nodes()
+        logs_handler.add_log("Graph loaded successfully.")
+    else:
+        logs_handler.add_log(f"File: {graph_file} not found.", -1)
+
 def open_jsonfile_dialog_callback(sender, app_data, user_data):
     logs_handler.add_log("Loading Graph")
     selected_file = None
@@ -94,17 +109,7 @@ def open_jsonfile_dialog_callback(sender, app_data, user_data):
         selected_file = list(app_data['selections'].items())[0][1]
     else:
         selected_file = app_data["file_path_name"]
-    if os.path.exists(selected_file):
-        node_ids = [ky for ky in graph_manager.nodes.keys()]
-        print(node_ids)
-        for node_id in node_ids:
-            node = graph_manager.get_node(node_id)
-            delete_node(node.node_id, node.node_index)
-        graph_manager.load_from_file(selected_file, node_factory)
-        create_loaded_nodes()
-        logs_handler.add_log("Graph loaded successfully.")
-    else:
-        logs_handler.add_log(f"File: {selected_file} not found.", -1)
+    load_graph(selected_file)
 
 def open_folder_dialog_callback(sender, app_data, user_data):
     selected_folder = app_data["file_path_name"]
@@ -141,6 +146,7 @@ def open_file_dialog(tag:str, user_data:str, callback, label="Open File"):
 def create_nodes_copy(node_ids:list[str]):
     dpg.disable_item("save_computation")
     created_nodes = {}
+    
     mouse_pos = get_relative_mouse_pos(REF_NODE_TAG)
     def get_new_pos(m_pos, n_pos):
         
@@ -151,7 +157,11 @@ def create_nodes_copy(node_ids:list[str]):
     for node_id in node_ids:
         node : Node = graph_manager.get_node(node_id)
         if created_nodes.__len__() == 0:
-            off_set = get_new_pos(mouse_pos, node.position)
+            if dpg.is_item_hovered(NODE_EDITOR_TAG):
+                off_set = get_new_pos(mouse_pos, node.position)
+            else:
+                off_set = get_new_pos([node.position[0], node.position[1] + 200], 
+                                      node.position)
         if not node_id in created_nodes:
             ui_manager.set_current_pos(node_id)
             new_pos = [node.position[0] + off_set[0], node.position[1] + off_set[1]]
@@ -266,15 +276,29 @@ def load_graph_callback():
         
 
 def paste_callback(sender, app_data, user_data):
-    if dpg.is_item_hovered(NODE_EDITOR_TAG) and selected_nodes.__len__() > 0:
-        create_nodes_copy(selected_nodes)
-    selected_nodes.clear()
+    if dpg.is_key_down(dpg.mvKey_LControl) or dpg.is_key_down(dpg.mvKey_RControl):
+        if selected_nodes.__len__() > 0:
+            create_nodes_copy(selected_nodes)
+        selected_nodes.clear()
 
 def copy_callback(sender, app_data, user_data):
-    sel_nodes = dpg.get_selected_nodes(NODE_EDITOR_TAG)
-    global selected_nodes
-    selected_nodes = [dpg.get_item_user_data(node_id)[0] for node_id in sel_nodes]
+    if dpg.is_key_down(dpg.mvKey_LControl) or dpg.is_key_down(dpg.mvKey_RControl):
+        sel_nodes = dpg.get_selected_nodes(NODE_EDITOR_TAG)
+        global selected_nodes
+        selected_nodes = [dpg.get_item_user_data(node_id)[0] for node_id in sel_nodes]
 
+def load_shorcut_callback(sender, app_data, user_data):
+    if dpg.is_key_down(dpg.mvKey_LControl) or dpg.is_key_down(dpg.mvKey_RControl):
+        load_graph_callback()
+
+def save_shorcut_callback(sender, app_data, user_data):
+    if dpg.is_key_down(dpg.mvKey_LControl) or dpg.is_key_down(dpg.mvKey_RControl):
+        save_graph_callback()
+
+
+def load_example_callback(sender, app_data, user_data):
+    examples_file = examples_folder + f"/{user_data}"
+    load_graph(examples_file)
 
 
 def delete_selected_nodes(sender, app_data, user_data):
@@ -285,6 +309,26 @@ def delete_selected_nodes(sender, app_data, user_data):
         node_index = int(node_user_data[0].split("_")[-1])
         delete_node(node_user_data[0], node_index)
 
+def main_menu():
+    with dpg.viewport_menu_bar():
+        with dpg.menu(label="File   "):
+            dpg.add_menu_item(label="Save       Ctrl+S", callback=save_graph_callback)
+            dpg.add_menu_item(label="Load       Ctrl+O", callback=load_graph_callback)
+            dpg.add_separator()
+            dpg.add_menu_item(label="Exit", callback=dpg.stop_dearpygui)
+
+        with dpg.menu(label="Edit   "):
+            dpg.add_menu_item(label="Copy       Ctrl+C", callback=copy_callback)
+            dpg.add_menu_item(label="Paste      Ctrl+V", callback=paste_callback)
+            dpg.add_menu_item(label="Delete     Del", callback=delete_selected_nodes, user_data=NODE_EDITOR_TAG)
+
+        with dpg.menu(label="Help   "):
+            dpg.add_menu_item(label="About      ", callback=lambda: logs_handler.add_log("About: This is a simple data analysis tool."))
+            with dpg.menu(label="Examples       "):
+                dpg.add_menu_item(label="Classification", callback=load_example_callback, user_data="classification_example.json")
+                dpg.add_menu_item(label="Clustering",  callback=load_example_callback, user_data="clustering_example.json")
+                dpg.add_menu_item(label="Regression",  callback=load_example_callback, user_data="regression_example.json")
+
 def setup_ui():
     with dpg.handler_registry():
         dpg.add_key_press_handler(dpg.mvKey_Delete, 
@@ -292,6 +336,9 @@ def setup_ui():
                                     user_data=NODE_EDITOR_TAG)
         dpg.add_key_press_handler(callback=copy_callback, key=dpg.mvKey_C)
         dpg.add_key_press_handler(callback=paste_callback, key=dpg.mvKey_V)
+        dpg.add_key_press_handler(callback=load_shorcut_callback, key=dpg.mvKey_O)
+        dpg.add_key_press_handler(callback=save_shorcut_callback, key=dpg.mvKey_S)
+    main_menu()
     
     plot_area.plot_setup()  
         # -------------------------

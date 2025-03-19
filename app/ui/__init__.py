@@ -10,9 +10,9 @@ from app.utils import utils
 
 
 def run():
+    dpg.create_viewport(title=VIEWPORT_TITLE, width=VIEWPORT_WIDTH, height=VIEWPORT_HEIGHT)
     utils.init()
     node_editor.setup_ui()
-    dpg.create_viewport(title=VIEWPORT_TITLE, width=VIEWPORT_WIDTH, height=VIEWPORT_HEIGHT)
     
 
     dpg.setup_dearpygui()

@@ -1,0 +1,158 @@
+{
+  "nodes": [
+    {
+      "node_id": "CSVImportNode_4",
+      "node_type": "CSVImportNode",
+      "params": {
+        "filepath": "F:\\personal_projects\\python_projects\\stats_tool\\stats_tool_repo\\deprecated\\data\\clustering_data\\blobs.csv",
+        "csv_sep": ",",
+        "target_col": "target_labels",
+        "xaxis_col": "",
+        "drop_cols": [],
+        "target_label_col": "",
+        "header": true,
+        "drop_xaxis": false
+      },
+      "position": [
+        401,
+        268
+      ],
+      "node_index": 4
+    },
+    {
+      "node_id": "LogisticRegressionNode_1",
+      "node_type": "LogisticRegressionNode",
+      "params": {
+        "penalty": "l2",
+        "test_size": 0.3,
+        "dual": false,
+        "tol": 0.0001,
+        "C": 1.0,
+        "fit_intercept": true,
+        "intercept_scaling": 1,
+        "class_weight": null,
+        "random_state": null,
+        "solver": "lbfgs",
+        "max_iter": 100,
+        "warm_start": false,
+        "n_jobs": null,
+        "l1_ratio": null,
+        "score": 1.0
+      },
+      "position": [
+        632,
+        245
+      ],
+      "node_index": 1
+    },
+    {
+      "node_id": "PairGridPlotNode_7",
+      "node_type": "PairGridPlotNode",
+      "params": {
+        "title": "Logistic Regression",
+        "region": "plot_3",
+        "plot_type": "pairgrid"
+      },
+      "position": [
+        1016,
+        314
+      ],
+      "node_index": 7
+    }
+  ],
+  "connections": [
+    [
+      "CSVImportNode_4",
+      "featuredata_CSVImportNode_4_output_0",
+      "LogisticRegressionNode_1",
+      "featuredata_LogisticRegressionNode_1_input_0"
+    ],
+    [
+      "CSVImportNode_4",
+      "targetdata_CSVImportNode_4_output_2",
+      "LogisticRegressionNode_1",
+      "targetdata_LogisticRegressionNode_1_input_2"
+    ],
+    [
+      "CSVImportNode_4",
+      "featuredata_CSVImportNode_4_output_0",
+      "PairGridPlotNode_7",
+      "featuredata_PairGridPlotNode_7_input_0"
+    ],
+    [
+      "LogisticRegressionNode_1",
+      "logisticregressionfitdata_LogisticRegressionNode_1_output_0",
+      "PairGridPlotNode_7",
+      "targetlabels_PairGridPlotNode_7_input_2"
+    ]
+  ],
+  "node_factory": {
+    "CSVImportNode": {
+      "count": 5,
+      "old_types": [
+        1,
+        2,
+        3
+      ]
+    },
+    "SQLDBImportNode": {
+      "count": 1,
+      "old_types": []
+    },
+    "SimpleLinearRegressionNode": {
+      "count": 1,
+      "old_types": []
+    },
+    "LinearRegressionNode": {
+      "count": 1,
+      "old_types": []
+    },
+    "HeatMapPlotNode": {
+      "count": 1,
+      "old_types": []
+    },
+    "XYScatterPlotNode": {
+      "count": 1,
+      "old_types": []
+    },
+    "PCANode": {
+      "count": 1,
+      "old_types": []
+    },
+    "PairGridPlotNode": {
+      "count": 8,
+      "old_types": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "NMFNode": {
+      "count": 1,
+      "old_types": []
+    },
+    "KMeansNode": {
+      "count": 4,
+      "old_types": [
+        1,
+        2,
+        3
+      ]
+    },
+    "DBSCANNode": {
+      "count": 4,
+      "old_types": [
+        1,
+        2,
+        3
+      ]
+    },
+    "LogisticRegressionNode": {
+      "count": 2,
+      "old_types": []
+    }
+  }
+}
