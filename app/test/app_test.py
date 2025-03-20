@@ -1,8 +1,9 @@
 
+import sys
 import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 import unittest
-import os
 import tempfile
 import pandas as pd
 
@@ -52,3 +53,6 @@ class TestCSVImportNode(unittest.TestCase):
         
         self.assertIsInstance(return_log, str)
 
+
+if __name__ == "__main__":
+    unittest.main()
