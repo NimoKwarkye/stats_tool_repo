@@ -148,7 +148,7 @@ class GraphManager:
         queue  = [node for node in self.nodes.values()
                  if incoming_count[node.node_id] == 0 and any(node.node_id in conn for conn in self.connections)]
         if not queue:
-            queue = [node for node in self.nodes.values() if node.node_id == conn[0] for conn in self.connections]
+            queue = [node for node in self.nodes.values()  for conn in self.connections if node.node_id == conn[0]]
         
         sorted_nodes = []
         while queue:
