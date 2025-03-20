@@ -69,6 +69,8 @@ class Node(ABC):
             key = port.port_id
             if key in data and data[key] is not None:
                 port.value[key] = data[key]
+            else:
+                port.value[key] = None
 
     def set_input(self, port_id, value):
         for port in self.input_ports:
