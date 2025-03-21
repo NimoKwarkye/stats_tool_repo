@@ -1,16 +1,16 @@
-# QuickEase: Accelerated ML Workflows
+# EasyML: Accelerated ML Workflows
 
-Welcome to **QuickEase**, your fast-track solution for building and executing machine learning workflows with minimal effort. Our node-based application empowers you to construct, experiment, and deploy intelligent data pipelines that leverage state-of-the-art ML concepts.
+Welcome to **EasyML**, your fast-track solution for building and executing machine learning workflows with minimal effort. Our node-based application empowers you to construct, experiment, and deploy intelligent data pipelines that leverage state-of-the-art ML concepts.
 
 ---
 
 ## Overview
 
-**QuickEase** uses an intuitive drag-and-drop interface where nodes represent key components of an ML pipeline:
+**EasyML** uses an intuitive drag-and-drop interface where nodes represent key components of an ML pipeline:
 
 - **Data Import & Preprocessing:** Ingest CSV data, perform feature extraction, and transform raw datasets into "clean" tensors ready for analysis.
 - **Statistical Modeling & Machine Learning:** Utilize nodes for clustering, regression, and principal component analysis (PCA), among other methods, to discover patterns and predict outcomes.
-- **Visualization:** Generate interactive plots, heat maps, and pair grids to visualize neural activation patterns, data distributions, and decision boundaries.
+- **Visualization:** Generate interactive plots, heat maps, and pair grids to visualize data distributions, and decision boundaries.
 
 ---
 
@@ -19,7 +19,7 @@ Welcome to **QuickEase**, your fast-track solution for building and executing ma
 - **Node-Based Workflow Editor:**
 
   - **Rapid Prototyping:** Assemble ML models by connecting nodes representing data ingestion, preprocessing, model training, and visualization.
-  - **Graph Execution:** Trigger end-to-end processing pipelines that apply techniques like gradient descent, ensemble methods, and clustering algorithms.
+  - **Graph Execution:** Trigger end-to-end processing pipelines that apply techniques like regression, classification methods, and clustering algorithms.
 
 - **Advanced Machine Learning Tools:**
 
@@ -29,11 +29,16 @@ Welcome to **QuickEase**, your fast-track solution for building and executing ma
 
 - **Customizable Visualizations:**
 
-  - **Interactive Plots:** Experiment with various plot types to interpret model outcomes, observe loss curves, and compare prediction intervals.
+  - **Interactive Plots:** Experiment with various plot types to interpret model outcomes and compare prediction intervals.
   - **Material Dark Theme:** Enjoy an aesthetically pleasing UI that emphasizes clarity and focus during intensive data analysis sessions.
 
 - **Streamlined Workflow Persistence:**
+
   - **Save & Load Pipelines:** Persist your ML workflow as a JSON graph and rehydrate it later for iterative enhancement or deployment.
+
+- **Deploying Models:**
+
+  - **Save Model:** Save ML models as pickel objects for deployment.
 
 ---
 
@@ -43,13 +48,13 @@ Welcome to **QuickEase**, your fast-track solution for building and executing ma
 
 Ensure you have the following dependencies installed:
 
-- `dearpygui==1.9.5`
-- `pandas>=1.3`
-- `numpy>=1.19`
-- `scikit-learn>=1.0`
-- `matplotlib>=3.4`
+- `dearpygui==2.0.0`
+- `pandas>=2.2.3`
+- `numpy>=2.2.3`
+- `scikit-learn>=1.6.1`
+- `sqlalchemy==2.0.38`
 
-### Launching QuickEase
+### Launching EasyML
 
 Run the application via the main script:
 
@@ -58,6 +63,16 @@ python main_app.py
 ```
 
 This launches the node editor so you can start assembling your AI pipelines immediately.
+
+### User Interface
+
+EasyML has three main windows on launch. Thus, Plots window for visualization, Logs window for events update, and the Editor for creating and editing nodes (see Figure below). Windows sizes and positions can be adjusted to suit needs.
+
+![user interface](./assets/screenshots/clustering_exp.png)
+
+### Examples
+
+Pre-created pipelines can be loaded from the menu bar Help->Examples. Right clicking on nodes opens a dialog box with settings for that particular nodes.
 
 ### Building Your Workflow
 
@@ -70,9 +85,32 @@ This launches the node editor so you can start assembling your AI pipelines imme
 
 ---
 
+## For Developers
+
+**EasyML** can extended by implementing two mandatory classes and an optional class for plot nodes.
+
+### Node Class
+
+- This class contains the logic and data for nodes. All node classes inherit from the base class **Node**. Two abstract methods compute and pre_save needs implementation.
+  - **compute method** is run for the node class during execution.
+  - **pre_save method** is executed when saving computations.
+- In summary, the node class contains the "business logic" of the node (see app/nodes for example implementation)"
+
+### NodeUI Class
+
+- This class implements how the node is displayed. All NodeUI classes inherit from **BaseNodeUI** class which handles drawing of the actual node.
+- However, three methods require implementation. Thus, a **node_popup**, **node_popup_callback**, and **update_ui** (see app/ui folder for example implementation)
+  - **node_popup** allow the user to customize the node for computation
+  - **node_popup_callback** saves user customized data
+  - **update_ui** update popup data when graph is loaded from disk.
+
+### Custom Plot Class
+
+- Custom plots can be implemented as a class in the plot_area file. see app/ui/plot_area.py for example implementation.
+
 ## Advanced Concepts
 
-**QuickEase** embraces industry-standard ML terminology and best practices:
+**EasyML** embraces industry-standard ML terminology and best practices:
 
 - **Feature Extraction & Engineering:** Transform raw data into robust feature sets.
 - **Hyperparameter Tuning:** Adjust settings to optimize learning regimens.
@@ -81,11 +119,11 @@ This launches the node editor so you can start assembling your AI pipelines imme
 
 ---
 
-## Why QuickEase?
+## Why EasyML?
 
-**QuickEase** is designed to reduce cognitive friction and computational overhead. By abstracting complex ML routines behind an intuitive node interface, you can experiment with various algorithms and rapidly iterate toward powerful, production-ready models.
+**EasyML** is designed to reduce cognitive friction and computational overhead. By abstracting complex ML routines behind an intuitive node interface, you can experiment with various algorithms and rapidly iterate toward powerful, production-ready models.
 
-Dive in, speed up your prototyping, and let QuickEase be your companion on your journey through the ever-evolving world of machine learning!
+Dive in, speed up your prototyping, and let **EasyML** be your companion on your journey through the ever-evolving world of machine learning!
 
 ---
 
