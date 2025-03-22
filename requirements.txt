@@ -1,5 +1,6 @@
 dearpygui==2.0.0
-pandas>=2.2.3
-numpy>=2.2.3
-scikit-learn>=1.6.1
-sqlalchemy==2.0.38
+numpy==2.2.4; python_version >= '3.10'
+pandas==2.2.3; python_version >= '3.9'
+scikit-learn==1.6.1; python_version >= '3.9'
+scipy==1.15.2; python_version >= '3.10'
+sqlalchemy==2.0.39; python_version >= '3.7'

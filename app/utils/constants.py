@@ -2,7 +2,7 @@ import dearpygui.dearpygui as dpg
 
 VIEWPORT_WIDTH = 800
 VIEWPORT_HEIGHT = 600
-VIEWPORT_TITLE = "EasyML"
+VIEWPORT_TITLE = "ML Forge"
 
 FONT_SIZE = 18
 FONT_FILE = "../assets/fonts/Roboto-Regular.ttf"
