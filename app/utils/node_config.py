@@ -129,3 +129,5 @@ NODE_CONFIG = {
         "category": "Classification"
     }
 }
+
+PLOT_NODES = ["HeatMapPlotNode", "XYScatterPlotNode", "PairGridPlotNode"]

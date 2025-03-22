@@ -14,7 +14,6 @@ class XYScatterPlotNode(Node):
             "ylabel": "y",
             "marker_style": 0,
             "region": "plot_1",
-            "marker_color": (255, 255, 55, 255),
             "line_color": (255, 155, 55, 255),
             "plot_type":"scatter",
         }
@@ -38,11 +37,9 @@ class XYScatterPlotNode(Node):
         self.labels_port_id = self.add_input_port("labels", [PortType.FEATURELABELSSTRING], "Feature Labels")
         self.target_labels_port_id = self.add_input_port("targetlabels", [PortType.TARGETLABELSSTRING], "Target Labels")
     
-    def pre_save(self):
-        return "", None
+    
 
     def compute(self):
-        print(f"[{self.node_id}] Computing XY Scatter Plot...")
         port_data = self.get_input_data()
         x_data = port_data.get(self.xaxisdata_port_id)
         y_data = port_data.get(self.targetdata_port_id)
@@ -107,11 +104,8 @@ class HeatMapPlotNode(Node):
                                                     PortType.MODELDATAFRAMEFLOAT], 
                                                     "Feature Data", True)
     
-    def pre_save(self):
-        return "", None
 
     def compute(self):
-        print(f"[{self.node_id}] Computing HeatMap Plot...")
         port_data = self.get_input_data().get(self.feature_port_id)
         if port_data is None:
             raise ValueError("HeatMapPlot: No data provided")
@@ -150,11 +144,9 @@ class PairGridPlotNode(Node):
         self.labels_port_id = self.add_input_port("featurelabels", [PortType.FEATURELABELSSTRING], "Feature Labels")
         self.target_labels_port_id = self.add_input_port("targetlabels", [PortType.TARGETLABELSSTRING], "Target Labels")
     
-    def pre_save(self):
-        return "", None
+    
 
     def compute(self):
-        print(f"[{self.node_id}] Computing PairGrid Plot...")
         ret_data = self.get_input_data()
         feature_data = ret_data.get(self.feature_port_id)
         feature_labels = ret_data.get(self.labels_port_id)

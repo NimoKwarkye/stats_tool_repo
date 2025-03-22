@@ -26,8 +26,7 @@ class XYScatterPlotNodeUI(BaseNodeUI):
                                tag=f"{self.INPUT_TAG}_{self.node_id}_xlabel")
             dpg.add_input_text(label="Y Label", hint="Enter the y-axis label here.", 
                                tag=f"{self.INPUT_TAG}_{self.node_id}_ylabel")
-            dpg.add_color_edit(label="Marker Color", default_value=(255, 255, 255, 255), 
-                               tag=f"{self.ACTION_TAG}_{self.node_id}_marker_color")
+            
             dpg.add_combo(label="Marker Style", 
                           items=["Circle", "Square", "Diamond", "Cross", "Plus", "Asterisk", "Triangle"],
                           default_value="Circle", 
@@ -48,7 +47,6 @@ class XYScatterPlotNodeUI(BaseNodeUI):
         self.node_instance.params["fit_label"] = dpg.get_value(f"{self.INPUT_TAG}_{self.node_id}_fit_legend").strip()
         self.node_instance.params["xlabel"] = dpg.get_value(f"{self.INPUT_TAG}_{self.node_id}_xlabel").strip()
         self.node_instance.params["ylabel"] = dpg.get_value(f"{self.INPUT_TAG}_{self.node_id}_ylabel").strip()
-        self.node_instance.params["marker_color"] = dpg.get_value(f"{self.ACTION_TAG}_{self.node_id}_marker_color")
         self.node_instance.params["line_color"] = dpg.get_value(f"{self.ACTION_TAG}_{self.node_id}_line_color")
 
 
@@ -95,8 +93,6 @@ class XYScatterPlotNodeUI(BaseNodeUI):
                       self.node_instance.params["xlabel"])
         dpg.set_value(f"{self.INPUT_TAG}_{self.node_id}_ylabel",
                       self.node_instance.params["ylabel"])
-        dpg.set_value(f"{self.ACTION_TAG}_{self.node_id}_marker_color",
-                      self.node_instance.params["marker_color"])
         dpg.set_value(f"{self.ACTION_TAG}_{self.node_id}_line_color",
                       self.node_instance.params["line_color"])
         

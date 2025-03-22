@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import os
 import pandas as pd
+import pickle
 from app.core.port import Port, PortType
 
 
@@ -39,7 +40,7 @@ class Node(ABC):
         return port.port_id
     
     def save_node_results(self, out_dir:str):
-        dir_name, data = self.pre_save()
+        dir_name, data, model_data = self.pre_save()
         if data is not None:
             save_dir = os.path.join(out_dir, dir_name)
             if not os.path.exists(save_dir):
@@ -47,6 +48,18 @@ class Node(ABC):
             for key, value in data.items():
                 file_name = os.path.join(save_dir, key + ".csv")
                 value.to_csv(file_name, index=False)
+        if model_data is not None:
+            save_dir = os.path.join(out_dir, dir_name)
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+            self.save_node_model(save_dir, model_data)
+
+    def save_node_model(self, out_dir:str, model_data : dict):
+        save_dir = out_dir
+        for key, value in model_data.items():
+            model_file = os.path.join(save_dir, f"{key}_model.pkl")
+            with open(model_file, 'wb') as file:
+                pickle.dump(value, file)
 
     
     def get_input_data(self):
@@ -141,8 +154,8 @@ class Node(ABC):
     def compute(self):
         """Execute the node's operation."""
         pass
-    @abstractmethod
+    
     def pre_save(self):
         """Save computed node data."""
-        pass
+        return "", None, None
 

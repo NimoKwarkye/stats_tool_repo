@@ -104,6 +104,10 @@ Pre-created pipelines can be loaded from the menu bar Help->Examples. Right clic
   - **node_popup_callback** saves user customized data
   - **update_ui** update popup data when graph is loaded from disk.
 
+### Registering Custom Nodes
+
+Custom created nodes needs to be registered in the node_config.py in app/utils folder. Note that plot nodes needs to be added to the list of plot nodes in the same file. Additionally, custom plots needs to be registered in plots_config.py.
+
 ### Custom Plot Class
 
 - Custom plots can be implemented as a class in the plot_area file. see app/ui/plot_area.py for example implementation.

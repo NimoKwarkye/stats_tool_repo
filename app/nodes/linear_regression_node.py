@@ -34,7 +34,7 @@ class SimpleLinearRegressionNode(Node):
             save_data[f"coef_{i+1}"] = [self.params["slope"][i]]
         
         df = pd.DataFrame(save_data)
-        return [self.compose_dir_name(self.feature_port_id), {"simple_linear_regression": df}]
+        return [self.compose_dir_name(self.feature_port_id), {"simple_linear_regression": df}, None]
 
     def compute(self):
         ret_data = self.get_input_data()
@@ -83,6 +83,7 @@ class LinearRegressionNode(Node):
             "coefficients": None,
             "intercept": None,
         }
+        self.reg_model = None
         self.feature_port_id = self.add_input_port("featuredata", 
                                                    [PortType.DATAFRAMEFLOAT, 
                                                     PortType.MODELDATAFRAMEFLOAT], 
@@ -122,7 +123,7 @@ class LinearRegressionNode(Node):
                     data_to_save[labels[j]].append(self.model_params["coefficients"][i, j])
 
         df = pd.DataFrame(data_to_save)
-        return [save_dir, {"linear_regression": df}]
+        return [save_dir, {"linear_regression": df}, {"linear_regression_model": self.reg_model}]
 
 
     def compute(self):
@@ -144,20 +145,19 @@ class LinearRegressionNode(Node):
             X_train, X_test, y_train, y_test = train_test_split(
                 feature_data, target_data, test_size=self.params["test_size"]
             )
-            reg_model = LinearRegression(positive=self.params["nng"])
-            reg_model.fit(X_train, y_train)
-            train_score = reg_model.score(X_train, y_train)
-            test_score = reg_model.score(X_test, y_test)
-            return_log = f"Train score: {train_score:.4f}\nTest score: {test_score:.4f}\nX rank: {reg_model.rank_}\n\
-                features seen: {reg_model.n_features_in_}"
+            self.reg_model = LinearRegression(positive=self.params["nng"])
+            self.reg_model.fit(X_train, y_train)
+            train_score = self.reg_model.score(X_train, y_train)
+            test_score = self.reg_model.score(X_test, y_test)
+            return_log = f"Train score: {train_score:.4f}\nTest score: {test_score:.4f}\nX rank: {self.reg_model.rank_}\nfeatures seen: {self.reg_model.n_features_in_}"
 
-            self.params["r2_score"] = r2_score(y_test, reg_model.predict(X_test))
-            self.model_params["coefficients"] = reg_model.coef_
-            self.model_params["intercept"] = reg_model.intercept_
+            self.params["r2_score"] = r2_score(y_test, self.reg_model.predict(X_test))
+            self.model_params["coefficients"] = self.reg_model.coef_
+            self.model_params["intercept"] = self.reg_model.intercept_
 
             if feature_data.ndim == 1:
                 feature_data = feature_data.reshape(-1, 1)
-            fitted_line = reg_model.predict(feature_data)
+            fitted_line = self.reg_model.predict(feature_data)
             
             output_data = {self.fit_port_id: [x_axis_data.tolist(), fitted_line.tolist()]}
             self.store_data_in_ports(output_data)

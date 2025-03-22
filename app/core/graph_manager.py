@@ -1,16 +1,18 @@
 from app.core.node import Node, Port
 import json
 from app.utils.log_handler import LogHandler
+import warnings
 import uuid
 class GraphManager:
     def __init__(self):
         self.nodes = {}         # Map node_id to node instance.
         self.connections = []   # List of connections:
-        self.logs_handler: LogHandler = LogHandler()                       # Each connection is (source_id, source_port, target_id, target_port).
+        self.logs_handler: LogHandler = LogHandler() # Each connection is (source_id, source_port, target_id, target_port).
+        self.warning_message = None
+        warnings.showwarning = self.warning_logs
 
     def add_node(self, node:Node):
         self.nodes[node.node_id] = node
-        print(f"GraphManager: Added node {node.node_id} ({node.name})")
 
     def connect(self, source_id, source_port_id, target_id, target_port_id):
         
@@ -72,7 +74,8 @@ class GraphManager:
                 self.nodes[con[2]].open_port(target_port_id)
         self.connections = [con for con in self.connections if not (source_port_id in con and target_port_id in con)]
         
-
+    def warning_logs(self, message, category, filename, lineno, file=None, line=None):
+        self.warning_message = f"{message}"
 
     def get_node(self, node_id):
         return self.nodes.get(node_id)
@@ -97,7 +100,7 @@ class GraphManager:
             data['nodes'].append(node_data)
         with open(filename, 'w') as f:
             json.dump(data, f, indent=2)
-        print(f"GraphManager: Graph saved to {filename}")
+        self.logs_handler.add_log(f"GraphManager: Graph saved to {filename}")
 
 
     def load_from_file(self, filename, node_factory):
@@ -120,7 +123,6 @@ class GraphManager:
             node: Node = node_factory.create_from_file(node_id, position, node_type, node_index)
             node.params.update(node_data.get('params', {}))
             self.nodes[node_id] = node
-            print(f"GraphManager: Loaded node {node_id} ({node_type})")
         
         for source_id, source_port, target_id, target_port in self.connections:
             source_node = self.nodes[source_id]
@@ -128,15 +130,13 @@ class GraphManager:
             target_node.set_input(target_port, source_node.get_output(source_port))
             target_node.add_connection(target_port, source_port)
             target_node.close_port(target_port)
-            print(f"GraphManager: Re-connected {source_id}.{source_port} -> {target_id}.{target_port}")
-        print(f"GraphManager: Graph loaded from {filename}")
+        self.logs_handler.add_log(f"GraphManager: Graph loaded from {filename}")
 
     def execute(self):
         """
         Executes only the nodes that are part of a connected subgraph.
         Execution is done in topological order.
         """
-        print("GraphManager: Executing connected nodes...")
         if  len(self.connections) == 0:
             self.logs_handler.add_log("GraphManager: No connections found.", 1)
             return False
@@ -161,8 +161,11 @@ class GraphManager:
                         queue.append(self.nodes[target_id])
         
         for node in sorted_nodes:
+            self.warning_message = None
             try:
                 node_log = node.compute()
+                if self.warning_message:
+                    self.logs_handler.add_log(f"{node.node_id}: {self.warning_message}", 1)
                 if node_log:
                     self.logs_handler.add_log(f"Computed {node.node_id}\n{node_log}")
             except Exception as e:

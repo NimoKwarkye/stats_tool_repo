@@ -330,20 +330,23 @@ class NoDataPlot(BasePlot):
         dpg.fit_axis_data(plot_region + "_y")
 
 class PlotManager:
-    def __init__(self):
-        self.plot_types = {
-            "scatter": ScatterPlot(),
-            "heatmap": HeatmapPlot(),
-            "pairgrid": PairGridPlot(),
-            "no_data": NoDataPlot()
-        }
+    
+    def __init__(self, plot_config:dict[str, BasePlot]):
+        self.plot_types={}
+        for key, value in plot_config.items():
+            self.plot_types[key] = value()
 
     def plot(self, node_params, plot_data):
-        self.plot_types[node_params["plot_type"]].plot(node_params, plot_data)
+        plot_type = node_params.get("plot_type", None)
+        if plot_type is not None:
+            if plot_type in self.plot_types:
+                self.plot_types[node_params["plot_type"]].plot(node_params, plot_data)
+            else:
+                raise ValueError(f"Plot type {node_params['plot_type']} not supported")
 
 class PlotArea:
-    def __init__(self):
-        self.plot_manager = PlotManager()
+    def __init__(self, plot_config:dict[str, BasePlot]):
+        self.plot_manager = PlotManager(plot_config)
         self.plot_tags = [PLOT_1_TAG, PLOT_2_TAG, PLOT_3_TAG, PLOT_4_TAG, PLOT_5_TAG, PLOT_6_TAG]
         self.nrows = 2
         self.ncols = 3

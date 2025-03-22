@@ -2,6 +2,7 @@
 import os
 import dearpygui.dearpygui as dpg
 from app.utils import app_themes
+import json
 
 from app.utils.constants import FONT_FILE, FONT_SIZE, FONT_TAG
 
@@ -14,8 +15,24 @@ def load_init_file():
     dpg.configure_app(init_file=absolute_path("./config/init.ini"))
 
 
+
 def get_examples_folder() -> str:
-    return absolute_path("./examples").replace("\\", "/")
+    return absolute_path("./examples")
+
+def update_example_file_path():
+    examples_folder = get_examples_folder()
+    examples = [os.path.join(examples_folder,  f) for f in os.listdir(examples_folder) if f.endswith(".json")]
+    for example in examples:
+        with open(example, "r") as f:
+            data = json.load(f)
+            for node in data["nodes"]:
+                if node["node_type"] == "CSVImportNode":
+                    filename = os.path.basename(node["params"]["filepath"])
+                    node["params"]["filepath"] = os.path.join(examples_folder, "data", filename)
+        
+        with open(example, "w") as f:
+            json.dump(data, f, indent=2)
+
 
 def on_exit():
     print("Application is terminating...")
@@ -33,4 +50,5 @@ def init():
     load_fonts()
     dpg.bind_font(FONT_TAG)
     app_themes.init()
+    update_example_file_path()
     #dpg.set_exit_callback(callback=lambda: on_exit())

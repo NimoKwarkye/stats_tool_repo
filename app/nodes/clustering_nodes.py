@@ -19,6 +19,7 @@ class KMeansNode(Node):
             "copy_x": True,
             "algorithm": "lloyd",
         }
+        self.kmeans = None
         self.feature_port_id = self.add_input_port("featuredata", 
                                                    [PortType.DATAFRAMEFLOAT, 
                                                     PortType.MODELDATAFRAMEFLOAT], 
@@ -53,7 +54,7 @@ class KMeansNode(Node):
         }
         labels_df = pd.DataFrame(labels_dict)
         return save_dir, {"kmeans_centroids": centroids_df, "kmeans_fit_data": fit_data_df, 
-                                  "kmeans_labels": labels_df}
+                                  "kmeans_labels": labels_df}, {"kmeans_model": self.kmeans}
 
 
     def compute(self):
@@ -66,7 +67,7 @@ class KMeansNode(Node):
             if feature_data.ndim == 1:
                 feature_data = feature_data.reshape(-1, 1)
 
-            kmeans = KMeans(
+            self.kmeans = KMeans(
                 n_clusters=self.params["n_clusters"],
                 init=self.params["init"],
                 n_init=self.params["n_init"],
@@ -77,15 +78,15 @@ class KMeansNode(Node):
                 algorithm=self.params["algorithm"],
                 copy_x=self.params["copy_x"],
             )
-            kmeans.fit(feature_data)
-            labels = kmeans.predict(feature_data)
-            x_transformed = kmeans.transform(feature_data)
+            self.kmeans.fit(feature_data)
+            labels = self.kmeans.predict(feature_data)
+            x_transformed = self.kmeans.transform(feature_data)
 
-            return_log = f"inertia: {kmeans.inertia_}\niterations: {kmeans.n_iter_}\nfeatures seen:{kmeans.n_features_in_}\nscore: {kmeans.score(feature_data)}"
+            return_log = f"inertia: {self.kmeans.inertia_}\niterations: {self.kmeans.n_iter_}\nfeatures seen:{self.kmeans.n_features_in_}\nscore: {self.kmeans.score(feature_data)}"
 
             output_data ={
                 self.fit_data_port_id: x_transformed,
-                self.fit_centroid_port_id: kmeans.cluster_centers_,
+                self.fit_centroid_port_id: self.kmeans.cluster_centers_,
                 self.cluster_labels_port_id: labels,
             }
             self.store_data_in_ports(output_data)
@@ -107,6 +108,7 @@ class DBSCANNode(Node):
             "leaf_size": 30,
             "n_jobs": None,
         }
+        self.dbscan = None
         self.feature_port_id = self.add_input_port("featuredata", 
                                                    [PortType.DATAFRAMEFLOAT, 
                                                     PortType.MODELDATAFRAMEFLOAT], 
@@ -125,7 +127,7 @@ class DBSCANNode(Node):
             "cluster_labels": labels
         }
         labels_df = pd.DataFrame(labels_dict)
-        return save_dir, {"dbscan_labels": labels_df}
+        return save_dir, {"dbscan_labels": labels_df}, {"dbscan_model": self.dbscan}
         
 
 
@@ -140,7 +142,7 @@ class DBSCANNode(Node):
             if feature_data.ndim == 1:
                 feature_data = feature_data.reshape(-1, 1)
 
-            dbscan = DBSCAN(
+            self.dbscan = DBSCAN(
                 eps=self.params["eps"],
                 min_samples=self.params["min_samples"],
                 metric=self.params["metric"],
@@ -148,11 +150,11 @@ class DBSCANNode(Node):
                 leaf_size=self.params["leaf_size"],
                 n_jobs=self.params["n_jobs"],
             )
-            labels = dbscan.fit_predict(feature_data)
-            fit_data = dbscan.components_
+            labels = self.dbscan.fit_predict(feature_data)
+            fit_data = self.dbscan.components_
             
             true_labels = [i for i in labels if i >= 0]
-            return_log = f"Number of clusters: {len(np.unique(true_labels))}\nfeatures seen: {dbscan.n_features_in_}"
+            return_log = f"Number of clusters: {len(np.unique(true_labels))}\nfeatures seen: {self.dbscan.n_features_in_}"
             output_data ={
                 self.fit_data_port_id: fit_data,
                 self.cluster_labels_port_id: np.array(labels),

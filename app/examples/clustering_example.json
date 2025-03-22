@@ -4,7 +4,7 @@
       "node_id": "CSVImportNode_1",
       "node_type": "CSVImportNode",
       "params": {
-        "filepath": "F:\\personal_projects\\python_projects\\stats_tool\\stats_tool_repo\\deprecated\\data\\clustering_data\\noisy_circles.csv",
+        "filepath": "F:\\personal_projects\\python_projects\\stats_tool\\stats_tool_repo\\app\\examples\\data\\noisy_circles.csv",
         "csv_sep": ",",
         "target_col": "",
         "xaxis_col": "",
@@ -88,7 +88,7 @@
       "node_id": "CSVImportNode_2",
       "node_type": "CSVImportNode",
       "params": {
-        "filepath": "F:\\personal_projects\\python_projects\\stats_tool\\stats_tool_repo\\deprecated\\data\\clustering_data\\noisy_moons.csv",
+        "filepath": "F:\\personal_projects\\python_projects\\stats_tool\\stats_tool_repo\\app\\examples\\data\\noisy_moons.csv",
         "csv_sep": ",",
         "target_col": "",
         "xaxis_col": "",
@@ -172,7 +172,7 @@
       "node_id": "CSVImportNode_3",
       "node_type": "CSVImportNode",
       "params": {
-        "filepath": "F:\\personal_projects\\python_projects\\stats_tool\\stats_tool_repo\\deprecated\\data\\clustering_data\\blobs.csv",
+        "filepath": "F:\\personal_projects\\python_projects\\stats_tool\\stats_tool_repo\\app\\examples\\data\\blobs.csv",
         "csv_sep": ",",
         "target_col": "",
         "xaxis_col": "",

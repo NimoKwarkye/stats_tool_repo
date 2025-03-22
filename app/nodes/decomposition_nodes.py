@@ -18,6 +18,7 @@ class PCANode(Node):
             "power_iteration_normalizer": "auto",
             "n_over_samples": 10,
         }
+        self.pca = None
         self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, 
                                                                    PortType.MODELDATAFRAMEFLOAT], 
                                                                    "Feature Data", True)
@@ -58,7 +59,7 @@ class PCANode(Node):
         pca_loadings_df = pd.DataFrame(pca_loadings_dict)
         
         return save_dir, {"explained_variance": explained_variance_df, "pca_components": pca_cmp_df,
-                              "pca_loadings": pca_loadings_df}
+                              "pca_loadings": pca_loadings_df}, {"pca_model": self.pca}
 
 
     def compute(self):
@@ -72,7 +73,7 @@ class PCANode(Node):
             if feature_data.ndim == 1:
                 feature_data = feature_data.reshape(-1, 1)
 
-            pca = PCA(
+            self.pca = PCA(
                 n_components=self.params["n_components"],
                 copy=self.params["copy_data"],
                 whiten=self.params["whiten"],
@@ -83,12 +84,12 @@ class PCANode(Node):
                 power_iteration_normalizer=self.params["power_iteration_normalizer"],
                 n_oversamples=self.params["n_over_samples"],
             )
-            pca.fit(feature_data)
-            pca_components = pca.transform(feature_data)
-            pca_loadings = pca.components_.T * np.sqrt(pca.explained_variance_)
-            pca_explained_variance = pca.explained_variance_ratio_
-            pca_component_names = [f"PC{i+1}" for i in range(pca.n_components_)]
-            return_log = f"Explained variance: {pca_explained_variance.sum()}\nscore: {pca.score(feature_data)}\nnoise variance: {pca.noise_variance_}\nfeatures seen: {pca.n_features_in_}"
+            self.pca.fit(feature_data)
+            pca_components = self.pca.transform(feature_data)
+            pca_loadings = self.pca.components_.T * np.sqrt(self.pca.explained_variance_)
+            pca_explained_variance = self.pca.explained_variance_ratio_
+            pca_component_names = [f"PC{i+1}" for i in range(self.pca.n_components_)]
+            return_log = f"Explained variance: {pca_explained_variance.sum()}\nscore: {self.pca.score(feature_data)}\nnoise variance: {self.pca.noise_variance_}\nfeatures seen: {self.pca.n_features_in_}"
             output_names = {
                 self.fit_data_port_id: pca_components,
                 self.loadings_port_id: pca_loadings,
@@ -118,6 +119,7 @@ class NMFNode(Node):
             "shuffle": False,
             "random_state": None,
         }
+        self.nmf = None
         self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, 
                                                                    PortType.MODELDATAFRAMEFLOAT], 
                                                                    "Feature Data", True)
@@ -145,7 +147,7 @@ class NMFNode(Node):
         for i, name in enumerate(nmf_labels):
             nmf_components_dict[name] = nmf_components[:, i]
         nmf_components_df = pd.DataFrame(nmf_components_dict)
-        return save_dir, {"nmf_loadings": nmf_loadings_df, "nmf_components": nmf_components_df}
+        return save_dir, {"nmf_loadings": nmf_loadings_df, "nmf_components": nmf_components_df}, {"nmf_model": self.nmf}
 
     def compute(self):
         feature_data = self.get_input_data().get(self.feature_port_id)
@@ -156,7 +158,7 @@ class NMFNode(Node):
             if feature_data.ndim == 1:
                 feature_data = feature_data.reshape(-1, 1)
 
-            nmf = NMF(
+            self.nmf = NMF(
                 n_components=self.params["n_components"],
                 init=self.params["init"],
                 solver=self.params["solver"],
@@ -170,11 +172,11 @@ class NMFNode(Node):
                 shuffle=self.params["shuffle"],
                 verbose=0,
             )
-            nmf.fit(feature_data)
-            nmf_components = nmf.transform(feature_data)
-            nmf_loadings = nmf.components_.transpose()
-            nmf_labels = [f"Cmp {i+1}" for i in range(nmf.n_components)]
-            return_log = f"Reconstruction error: {nmf.reconstruction_err_}\niterations: {nmf.n_iter_}\nfeatures seen: {nmf.n_features_in_}"
+            self.nmf.fit(feature_data)
+            nmf_components = self.nmf.transform(feature_data)
+            nmf_loadings = self.nmf.components_.transpose()
+            nmf_labels = [f"Cmp {i+1}" for i in range(self.nmf.n_components)]
+            return_log = f"Reconstruction error: {self.nmf.reconstruction_err_}\niterations: {self.nmf.n_iter_}\nfeatures seen: {self.nmf.n_features_in_}"
             output_names = {
                 self.fit_data_port_id: nmf_components,
                 self.loadings_port_id: nmf_loadings,

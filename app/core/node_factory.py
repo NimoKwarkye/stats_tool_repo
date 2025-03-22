@@ -11,7 +11,7 @@ class NodeFactory:
             "count": 1,
             "old_types": []
         }
-        print(f"NodeFactory: Registered prototype for {type_name}")
+        #print(f"NodeFactory: Registered prototype for {type_name}")
 
 
     def create_from_file(self, node_id, position, type_name, node_index):
@@ -46,4 +46,4 @@ class NodeFactory:
         self.prototypes_count[type_name]["old_types"].append(node_index)
         self.prototypes_count[type_name]["old_types"].sort()
 
-        print(f"NodeFactory: Deleted node {type_name}")
+        #print(f"NodeFactory: Deleted node {type_name}")

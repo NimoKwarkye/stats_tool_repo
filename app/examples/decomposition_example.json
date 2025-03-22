@@ -4,7 +4,7 @@
       "node_id": "CSVImportNode_1",
       "node_type": "CSVImportNode",
       "params": {
-        "filepath": "F:\\personal_projects\\python_projects\\stats_tool\\stats_tool_repo\\deprecated\\data\\iris.csv",
+        "filepath": "F:\\personal_projects\\python_projects\\stats_tool\\stats_tool_repo\\app\\examples\\data\\iris.csv",
         "csv_sep": ",",
         "target_col": "",
         "xaxis_col": "",

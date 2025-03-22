@@ -26,6 +26,7 @@ class LogisticRegressionNode(Node):
             "l1_ratio": None,
             "score": 0,
         }
+        self.lgr = None
         self.feature_port_id = self.add_input_port("featuredata", 
                                                    [PortType.DATAFRAMEFLOAT, 
                                                     PortType.MODELDATAFRAMEFLOAT], 
@@ -75,7 +76,7 @@ class LogisticRegressionNode(Node):
         data_to_save["logistic_regression_coefficients"] = pd.DataFrame(coef_dict)
         data_to_save["logistic_regression_classes"] = pd.DataFrame({"classes": classes})
 
-        return save_dir, data_to_save
+        return save_dir, data_to_save, {"logistic_regression_model": self.lgr}
 
   
 
@@ -88,7 +89,7 @@ class LogisticRegressionNode(Node):
             raise ValueError("Missing required data")
         
         try:
-            lgr = LogisticRegression(
+            self.lgr = LogisticRegression(
                 penalty=self.params["penalty"],
                 dual=self.params["dual"],
                 tol=self.params["tol"],
@@ -115,18 +116,18 @@ class LogisticRegressionNode(Node):
             
 
 
-            lgr = lgr.fit(X_train, y_train, weight_train)
-            classes = lgr.predict(feature_data)
-            train_score = lgr.score(X_train, y_train, weight_train)
-            test_score = lgr.score(X_test, y_test, weight_test)
+            self.lgr = self.lgr.fit(X_train, y_train, weight_train)
+            classes = self.lgr.predict(feature_data)
+            train_score = self.lgr.score(X_train, y_train, weight_train)
+            test_score = self.lgr.score(X_test, y_test, weight_test)
             unique_classes = np.unique(classes)
-            return_log = f"Train Score: {train_score}\nTest Score: {test_score}\nclasses: {unique_classes.tolist()}\niterations: {lgr.n_iter_}"
-            self.params["score"] = lgr.score(feature_data, target_data, sample_weight_data)
+            return_log = f"Train Score: {train_score}\nTest Score: {test_score}\nclasses: {unique_classes.tolist()}\niterations: {self.lgr.n_iter_}"
+            self.params["score"] = self.lgr.score(feature_data, target_data, sample_weight_data)
 
-            intercept = lgr.intercept_
+            intercept = self.lgr.intercept_
             if intercept.ndim == 1:
                 intercept = intercept.reshape(-1, 1)
-            coef = lgr.coef_
+            coef = self.lgr.coef_
             if coef.ndim == 1:
                 coef = coef.reshape(-1, 1)
             coef = np.concat((intercept, coef), axis=1)
@@ -134,7 +135,7 @@ class LogisticRegressionNode(Node):
             output_data = {
                 self.class_data_port_id: classes,
                 self.coef_port_id: coef,
-                self.model_port_id: lgr,
+                self.model_port_id: self.lgr,
             }
             self.store_data_in_ports(output_data)
             return return_log
