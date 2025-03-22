@@ -11,8 +11,25 @@ class CSVImportNodeUI(BaseNodeUI):
         self.INPUT_TAG = dpg.generate_uuid()
         self.ACTION_TAG = dpg.generate_uuid()
         self.POP_UP_TAG = dpg.generate_uuid()
+        self.CSV_FILE_DIALOG = f"{dpg.generate_uuid()}_{self.node_id}"
+        self.open_csv_file()
 
     
+    def open_csv_file(self):
+        with dpg.file_dialog(
+                         label="Select CSV File", directory_selector=False, show=False, 
+                         tag=f"{self.CSV_FILE_DIALOG}", width=520 ,
+                         height=400, modal=True, user_data=f"{self.INPUT_TAG}_{self.node_id}_filepath",
+                         callback=self.open_csvfile_dialog_callback):
+            dpg.add_file_extension("Source files (*.csv){.csv}", color=(0, 255, 255, 255))
+            dpg.add_file_extension(".csv", color=(255, 0, 255, 255), custom_text="[CSV]")
+
+    def open_csvfile_dialog_callback(self, sender, app_data, user_data):
+        input_text_tag = user_data
+        selected_file = list(app_data['selections'].items())[0][1]
+        if dpg.does_item_exist(input_text_tag):
+            dpg.set_value(input_text_tag, selected_file)
+
     def node_popup(self):
         with dpg.popup(tag=f"{self.POP_UP_TAG}_{self.node_id}", 
                        mousebutton=dpg.mvMouseButton_Right,
@@ -23,8 +40,7 @@ class CSVImportNodeUI(BaseNodeUI):
             with dpg.group(horizontal=True):
                 dpg.add_input_text(label="File Path", hint="Enter the file path here.",
                                    tag=f"{self.INPUT_TAG}_{self.node_id}_filepath")                
-                dpg.add_button(label="Browse", 
-                               )
+                dpg.add_button(label="Browse", callback=lambda:dpg.show_item(f"{self.CSV_FILE_DIALOG}"))
                 
             dpg.add_checkbox(label="Headers", default_value=True, 
                              tag=f"{self.ACTION_TAG}_{self.node_id}_header")

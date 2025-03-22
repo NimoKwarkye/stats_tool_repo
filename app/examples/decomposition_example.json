@@ -1,0 +1,237 @@
+{
+  "nodes": [
+    {
+      "node_id": "CSVImportNode_1",
+      "node_type": "CSVImportNode",
+      "params": {
+        "filepath": "F:\\personal_projects\\python_projects\\stats_tool\\stats_tool_repo\\deprecated\\data\\iris.csv",
+        "csv_sep": ",",
+        "target_col": "",
+        "xaxis_col": "",
+        "drop_cols": [],
+        "target_label_col": "variety",
+        "header": true,
+        "drop_xaxis": false
+      },
+      "position": [
+        282,
+        186
+      ],
+      "node_index": 1
+    },
+    {
+      "node_id": "PairGridPlotNode_1",
+      "node_type": "PairGridPlotNode",
+      "params": {
+        "title": "Iris Data Plot",
+        "region": "plot_1",
+        "plot_type": "pairgrid"
+      },
+      "position": [
+        460,
+        69
+      ],
+      "node_index": 1
+    },
+    {
+      "node_id": "PCANode_1",
+      "node_type": "PCANode",
+      "params": {
+        "n_components": 2,
+        "copy_data": true,
+        "whiten": false,
+        "svd_solver": "auto",
+        "tol": 0.0,
+        "iterated_power": 0,
+        "random_state": null,
+        "power_iteration_normalizer": "auto",
+        "n_over_samples": 10
+      },
+      "position": [
+        471,
+        260
+      ],
+      "node_index": 1
+    },
+    {
+      "node_id": "PairGridPlotNode_2",
+      "node_type": "PairGridPlotNode",
+      "params": {
+        "title": "PCA Components",
+        "region": "plot_2",
+        "plot_type": "pairgrid"
+      },
+      "position": [
+        791,
+        348
+      ],
+      "node_index": 2
+    },
+    {
+      "node_id": "NMFNode_1",
+      "node_type": "NMFNode",
+      "params": {
+        "n_components": 2,
+        "init": null,
+        "solver": "cd",
+        "beta_loss": "frobenius",
+        "tol": 9.999999747378752e-05,
+        "max_iter": 200,
+        "alpha_W": 0.0,
+        "alpha_H": 0.0,
+        "l1_ratio": 0.0,
+        "shuffle": false,
+        "random_state": null
+      },
+      "position": [
+        757,
+        99
+      ],
+      "node_index": 1
+    },
+    {
+      "node_id": "PairGridPlotNode_3",
+      "node_type": "PairGridPlotNode",
+      "params": {
+        "title": "NMF Components",
+        "region": "plot_3",
+        "plot_type": "pairgrid"
+      },
+      "position": [
+        1077,
+        129
+      ],
+      "node_index": 3
+    }
+  ],
+  "connections": [
+    [
+      "CSVImportNode_1",
+      "featuredata_CSVImportNode_1_output_0",
+      "PairGridPlotNode_1",
+      "featuredata_PairGridPlotNode_1_input_0"
+    ],
+    [
+      "CSVImportNode_1",
+      "targetlabels_CSVImportNode_1_output_4",
+      "PairGridPlotNode_1",
+      "targetlabels_PairGridPlotNode_1_input_2"
+    ],
+    [
+      "CSVImportNode_1",
+      "featuredata_CSVImportNode_1_output_0",
+      "PCANode_1",
+      "featuredata_PCANode_1_input_0"
+    ],
+    [
+      "CSVImportNode_1",
+      "featurelabels_CSVImportNode_1_output_3",
+      "PCANode_1",
+      "featurelabels_PCANode_1_input_1"
+    ],
+    [
+      "PCANode_1",
+      "fitdatacomponents_PCANode_1_output_0",
+      "PairGridPlotNode_2",
+      "featuredata_PairGridPlotNode_2_input_0"
+    ],
+    [
+      "PCANode_1",
+      "pcacomponentnames_PCANode_1_output_3",
+      "PairGridPlotNode_2",
+      "featurelabels_PairGridPlotNode_2_input_1"
+    ],
+    [
+      "CSVImportNode_1",
+      "targetlabels_CSVImportNode_1_output_4",
+      "PairGridPlotNode_2",
+      "targetlabels_PairGridPlotNode_2_input_2"
+    ],
+    [
+      "CSVImportNode_1",
+      "featuredata_CSVImportNode_1_output_0",
+      "NMFNode_1",
+      "featuredata_NMFNode_1_input_0"
+    ],
+    [
+      "CSVImportNode_1",
+      "featurelabels_CSVImportNode_1_output_3",
+      "NMFNode_1",
+      "featurelabels_NMFNode_1_input_1"
+    ],
+    [
+      "NMFNode_1",
+      "fitdatacomponents_NMFNode_1_output_0",
+      "PairGridPlotNode_3",
+      "featuredata_PairGridPlotNode_3_input_0"
+    ],
+    [
+      "NMFNode_1",
+      "fitdatalabels_NMFNode_1_output_2",
+      "PairGridPlotNode_3",
+      "featurelabels_PairGridPlotNode_3_input_1"
+    ],
+    [
+      "CSVImportNode_1",
+      "targetlabels_CSVImportNode_1_output_4",
+      "PairGridPlotNode_3",
+      "targetlabels_PairGridPlotNode_3_input_2"
+    ],
+    [
+      "CSVImportNode_1",
+      "featurelabels_CSVImportNode_1_output_3",
+      "PairGridPlotNode_1",
+      "featurelabels_PairGridPlotNode_1_input_1"
+    ]
+  ],
+  "node_factory": {
+    "CSVImportNode": {
+      "count": 2,
+      "old_types": []
+    },
+    "SQLDBImportNode": {
+      "count": 1,
+      "old_types": []
+    },
+    "SimpleLinearRegressionNode": {
+      "count": 1,
+      "old_types": []
+    },
+    "LinearRegressionNode": {
+      "count": 1,
+      "old_types": []
+    },
+    "HeatMapPlotNode": {
+      "count": 1,
+      "old_types": []
+    },
+    "XYScatterPlotNode": {
+      "count": 1,
+      "old_types": []
+    },
+    "PCANode": {
+      "count": 2,
+      "old_types": []
+    },
+    "PairGridPlotNode": {
+      "count": 4,
+      "old_types": []
+    },
+    "NMFNode": {
+      "count": 2,
+      "old_types": []
+    },
+    "KMeansNode": {
+      "count": 1,
+      "old_types": []
+    },
+    "DBSCANNode": {
+      "count": 1,
+      "old_types": []
+    },
+    "LogisticRegressionNode": {
+      "count": 1,
+      "old_types": []
+    }
+  }
+}

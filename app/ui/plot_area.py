@@ -225,7 +225,9 @@ class PairGridPlot(BasePlot):
         else:
             feature_labels = plot_data["labels"]
         
-        labels_count = len(feature_labels)
+        max_val = np.max(data)
+        min_val = np.min(data)
+        labels_count = 1
         unique_labels = None
         if plot_data["target_label"] is not None and \
             plot_data["target_label"].shape[0] == data.shape[0]:
@@ -250,6 +252,7 @@ class PairGridPlot(BasePlot):
                         if i == j:
                             dpg.add_plot_axis(dpg.mvXAxis, label="", tag=x_axis_tag)
                             dpg.add_plot_axis(dpg.mvYAxis, label="freq.", tag=y_axis_tag)
+                            dpg.set_axis_limits(x_axis_tag, min_val, max_val)
 
                             this_plot_tag = cell_tag + f"hist_{feature_labels[i]}"
                             this_plot_theme = cell_tag + f"hist_theme_{feature_labels[i]}"
@@ -285,11 +288,14 @@ class PairGridPlot(BasePlot):
                                     dpg.bind_item_theme(this_plot_tag_1, this_plot_theme_1)
                                     self.track_tags[node_params["region"]].append(this_plot_theme_1)
                                     self.track_tags[node_params["region"]].append(this_plot_tag_1)
+                                dpg.fit_axis_data(x_axis_tag)
+                                dpg.fit_axis_data(y_axis_tag)
                             else:
                                 dpg.add_plot_axis(dpg.mvXAxis, label="", tag=x_axis_tag)
                                 dpg.add_plot_axis(dpg.mvYAxis, label="freq.", tag=y_axis_tag)
-                                y1 = data[:, j].tolist()
-                                y2 = data[:, i].tolist()
+                                dpg.set_axis_limits(x_axis_tag, min_val, max_val)
+                                y1 = data[:, i].tolist()
+                                y2 = data[:, j].tolist()
                                 this_plot_tag_1 = cell_tag + f"hist_{feature_labels[i]}_{feature_labels[j]}_1"
                                 this_plot_theme_1 = cell_tag + f"hist_theme_{feature_labels[i]}_{feature_labels[j]}_1"
                                 this_plot_tag_2 = cell_tag + f"hist_{feature_labels[i]}_{feature_labels[j]}_2"
@@ -304,8 +310,7 @@ class PairGridPlot(BasePlot):
                                 self.track_tags[node_params["region"]].append(this_plot_theme_1)
                                 self.track_tags[node_params["region"]].append(this_plot_theme_2)
                             
-                        dpg.fit_axis_data(x_axis_tag)
-                        dpg.fit_axis_data(y_axis_tag)
+                        
 
 class NoDataPlot(BasePlot):
     

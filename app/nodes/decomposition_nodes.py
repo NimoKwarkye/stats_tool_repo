@@ -18,7 +18,9 @@ class PCANode(Node):
             "power_iteration_normalizer": "auto",
             "n_over_samples": 10,
         }
-        self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, PortType.MODELDATAFRAMEFLOAT], "Feature Data")
+        self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, 
+                                                                   PortType.MODELDATAFRAMEFLOAT], 
+                                                                   "Feature Data", True)
         self.feature_labels_port_id = self.add_input_port("featurelabels", [PortType.FEATURELABELSSTRING], "Feature Labels")
         self.fit_data_port_id = self.add_output_port("fitdatacomponents", PortType.MODELDATAFRAMEFLOAT, "PCA Components")
         self.loadings_port_id = self.add_output_port("fitdataloadings", PortType.MODELDATAFRAMEFLOAT, "PCA Loadings")
@@ -86,8 +88,7 @@ class PCANode(Node):
             pca_loadings = pca.components_.T * np.sqrt(pca.explained_variance_)
             pca_explained_variance = pca.explained_variance_ratio_
             pca_component_names = [f"PC{i+1}" for i in range(pca.n_components_)]
-            return_log = f"Explained variance: {pca_explained_variance.sum()}\nscore: {pca.score(feature_data)}\n\
-                noise variance: {pca.noise_variance_}\nfeatures seen: {pca.n_features_in_}"
+            return_log = f"Explained variance: {pca_explained_variance.sum()}\nscore: {pca.score(feature_data)}\nnoise variance: {pca.noise_variance_}\nfeatures seen: {pca.n_features_in_}"
             output_names = {
                 self.fit_data_port_id: pca_components,
                 self.loadings_port_id: pca_loadings,
@@ -117,7 +118,9 @@ class NMFNode(Node):
             "shuffle": False,
             "random_state": None,
         }
-        self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, PortType.MODELDATAFRAMEFLOAT], "Feature Data")
+        self.feature_port_id = self.add_input_port("featuredata", [PortType.DATAFRAMEFLOAT, 
+                                                                   PortType.MODELDATAFRAMEFLOAT], 
+                                                                   "Feature Data", True)
         self.feature_labels_port_id = self.add_input_port("featurelabels", [PortType.FEATURELABELSSTRING], "Feature Labels")
         self.fit_data_port_id = self.add_output_port("fitdatacomponents", PortType.MODELDATAFRAMEFLOAT, "NMF Components")
         self.loadings_port_id = self.add_output_port("fitdataloadings", PortType.MODELDATAFRAMEFLOAT, "NMF Loadings")
@@ -171,8 +174,7 @@ class NMFNode(Node):
             nmf_components = nmf.transform(feature_data)
             nmf_loadings = nmf.components_.transpose()
             nmf_labels = [f"Cmp {i+1}" for i in range(nmf.n_components)]
-            return_log = f"Reconstruction error: {nmf.reconstruction_err_}\n\
-                iterations: {nmf.n_iter_}\nfeatures seen: {nmf.n_features_in_}"
+            return_log = f"Reconstruction error: {nmf.reconstruction_err_}\niterations: {nmf.n_iter_}\nfeatures seen: {nmf.n_features_in_}"
             output_names = {
                 self.fit_data_port_id: nmf_components,
                 self.loadings_port_id: nmf_loadings,
