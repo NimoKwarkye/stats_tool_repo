@@ -2,7 +2,7 @@ import dearpygui.dearpygui as dpg
 
 VIEWPORT_WIDTH = 800
 VIEWPORT_HEIGHT = 600
-VIEWPORT_TITLE = "ML Forge"
+VIEWPORT_TITLE = "XploreML"
 
 FONT_SIZE = 18
 FONT_FILE = "../assets/fonts/Roboto-Regular.ttf"

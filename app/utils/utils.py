@@ -24,6 +24,11 @@ def get_basename(path: str) -> str:
 def get_examples_folder() -> str:
     return absolute_path("./examples")
 
+def return_logos():
+    return [absolute_path("./assets/logo/logo_32.ico").replace("\\", "/"), 
+            absolute_path("./assets/logo/logo_64.ico").replace("\\", "/")]
+
+
 def update_example_file_path():
     examples_folder = get_examples_folder()
     examples = [os.path.join(examples_folder,  f) for f in os.listdir(examples_folder) if f.endswith(".json")]

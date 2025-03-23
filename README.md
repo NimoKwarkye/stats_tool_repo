@@ -1,12 +1,17 @@
-# NodeMind: Accelerated ML Workflows
+# XploreML: Accelerated ML Workflows
 
-Welcome to **NodeMind**, your fast-track solution for building and executing machine learning workflows with minimal effort. Our node-based application empowers you to construct, experiment, and deploy intelligent data pipelines that leverage state-of-the-art ML concepts.
+![main logo](./assets/logo/logo_full.png)
+
+Welcome to **XploreML**, your fast-track solution for building and executing machine learning workflows with minimal effort. Our node-based application empowers you to construct, experiment, and deploy intelligent data pipelines that leverage state-of-the-art ML concepts.
 
 ---
 
+> **⚠️ Warning:**
+> This application is not production ready!
+
 ## Overview
 
-**NodeMind** uses an intuitive drag-and-drop interface where nodes represent key components of an ML pipeline:
+**XploreML** uses an intuitive drag-and-drop interface where nodes represent key components of an ML pipeline:
 
 - **Data Import & Preprocessing:** Ingest CSV data, perform feature extraction, and transform raw datasets into "clean" tensors ready for analysis.
 - **Statistical Modeling & Machine Learning:** Utilize nodes for clustering, regression, and principal component analysis (PCA), among other methods, to discover patterns and predict outcomes.
@@ -54,7 +59,7 @@ Ensure you have the following dependencies installed:
 - `scikit-learn>=1.6.1`
 - `sqlalchemy==2.0.38`
 
-### Launching NodeMind
+### Launching XploreML
 
 Run the application via the main script:
 
@@ -66,7 +71,7 @@ This launches the node editor so you can start assembling your AI pipelines imme
 
 ### User Interface
 
-**NodeMind** has three main windows on launch. Thus, Plots window for visualization, Logs window for events update, and the Editor for creating and editing nodes (see Figure below). Windows sizes and positions can be adjusted to suit needs.
+**XploreML** has three main windows on launch. Thus, Plots window for visualization, Logs window for events update, and the Editor for creating and editing nodes (see Figure below). Windows sizes and positions can be adjusted to suit needs.
 
 ![user interface](./assets/screenshots/clustering_exp.png)
 
@@ -87,7 +92,7 @@ Pre-created pipelines can be loaded from the menu bar Help->Examples. Right clic
 
 ## For Developers
 
-**NodeMind** can extended by implementing two mandatory classes and an optional class for plot nodes.
+**XploreML** can extended by implementing two mandatory classes and an optional class for plot nodes.
 
 ### Node Class
 
@@ -114,7 +119,7 @@ Custom created nodes needs to be registered in the node_config.py in app/utils f
 
 ## Advanced Concepts
 
-**NodeMind** embraces industry-standard ML terminology and best practices:
+**XploreML** embraces industry-standard ML terminology and best practices:
 
 - **Feature Extraction & Engineering:** Transform raw data into robust feature sets.
 - **Hyperparameter Tuning:** Adjust settings to optimize learning regimens.
@@ -123,11 +128,11 @@ Custom created nodes needs to be registered in the node_config.py in app/utils f
 
 ---
 
-## Why NodeMind?
+## Why XploreML?
 
-**NodeMind** is designed to reduce cognitive friction and computational overhead. By abstracting complex ML routines behind an intuitive node interface, you can experiment with various algorithms and rapidly iterate toward powerful, production-ready models.
+**XploreML** is designed to reduce cognitive friction and computational overhead. By abstracting complex ML routines behind an intuitive node interface, you can experiment with various algorithms and rapidly iterate toward powerful, production-ready models.
 
-Dive in, speed up your prototyping, and let **NodeMind** be your companion on your journey through the ever-evolving world of machine learning!
+Dive in, speed up your prototyping, and let **XploreML** be your companion on your journey through the ever-evolving world of machine learning!
 
 ---
 
