@@ -3,6 +3,7 @@ import os
 import dearpygui.dearpygui as dpg
 from app.utils import app_themes
 import json
+from pathlib import Path
 
 from app.utils.constants import FONT_FILE, FONT_SIZE, FONT_TAG
 
@@ -14,6 +15,10 @@ def absolute_path(relative_path: str) -> str:
 def load_init_file():
     dpg.configure_app(init_file=absolute_path("./config/init.ini"))
 
+
+def get_basename(path: str) -> str:
+    normalized_path = path.replace("\\", "/")
+    return Path(normalized_path).name
 
 
 def get_examples_folder() -> str:
@@ -27,7 +32,8 @@ def update_example_file_path():
             data = json.load(f)
             for node in data["nodes"]:
                 if node["node_type"] == "CSVImportNode":
-                    filename = os.path.basename(node["params"]["filepath"])
+                    
+                    filename = get_basename(node["params"]["filepath"])
                     node["params"]["filepath"] = os.path.join(examples_folder, "data", filename)
         
         with open(example, "w") as f:
