@@ -6,9 +6,6 @@ Welcome to **XploreML**, your fast-track solution for building and executing mac
 
 ---
 
-> **⚠️ Warning:**
-> This application is not production ready!
-
 ## Overview
 
 **XploreML** uses an intuitive drag-and-drop interface where nodes represent key components of an ML pipeline:
